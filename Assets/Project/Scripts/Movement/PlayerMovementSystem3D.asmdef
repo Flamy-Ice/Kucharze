@@ -1,0 +1,6 @@
+{
+  "name": "PlayerMovementSystem3D",
+  "rootNamespace": "ModularMovement",
+  "references": ["Unity.InputSystem"],
+  "autoReferenced": true
+}

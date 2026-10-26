@@ -5,7 +5,7 @@ namespace ModularMovement
     // Offers a short, straight burst. The motor still handles collisions and the actual move.
     [DisallowMultipleComponent, AddComponentMenu("Movement/Player Dash")]
     [RequireComponent(typeof(PlayerMovementResolver))]
-    public sealed class PlayerDash : MonoBehaviour, IMovementProvider
+    public sealed class PlayerDash : MonoBehaviour, ITimedMovementProvider
     {
         // The curve scales this top speed; the player does not keep it for the whole burst.
         [SerializeField, Min(0f)] private float dashSpeed = 18f;
@@ -22,6 +22,10 @@ namespace ModularMovement
         private float remainingDuration;
         // Keep the starting duration so editing the setting cannot skip ahead in the active curve.
         private float activeDuration;
+        // Save this step's slice so the resolver can finish it with the next movement offer.
+        private float stepStart;
+        private float stepEnd;
+        private float stepDuration;
         // Remember handled presses and input resets, so old input cannot start a new burst.
         private uint lastPressCount;
         private uint lastResetVersion;
@@ -40,6 +44,9 @@ namespace ModularMovement
         // These readings describe this ability. A wall may still stop the player's actual movement.
         public float CooldownRemaining { get; private set; }
         public bool IsDashing => remainingDuration > 0f;
+        // Keeps the final step at one until another dash starts or this ability is reset.
+        public float DashProgress => activeDuration > 0f
+            ? Mathf.Clamp01(1f - remainingDuration / activeDuration) : 0f;
         public string SourceId => "Dash";
         // Dash outranks normal walking and running; the resolver needs no ability names.
         public int Priority => 100;
@@ -69,6 +76,7 @@ namespace ModularMovement
 
         public MovementIntent Evaluate(in MovementStep step)
         {
+            stepDuration = 0f;
             // The resolver calls this once per movement step. Unsafe steps offer no movement.
             if (!IsEligible || context == null || context.Input == null || step.DeltaTime <= 0f
                 || float.IsNaN(step.DeltaTime) || float.IsInfinity(step.DeltaTime))
@@ -108,6 +116,9 @@ namespace ModularMovement
             // Curve time runs from 0 at the start to 1 at the end, regardless of burst duration.
             float start = Mathf.Clamp01((activeDuration - remainingDuration) / activeDuration);
             float end = Mathf.Clamp01(start + usedTime / activeDuration);
+            stepStart = start;
+            stepEnd = end;
+            stepDuration = usedTime;
             // Average the curve over this step so a low frame rate does not change burst distance.
             float weightedTime = activeDuration * IntegrateSpeedCurve(start, end);
             remainingDuration = Mathf.Max(0f, remainingDuration - usedTime);
@@ -122,10 +133,26 @@ namespace ModularMovement
             return new MovementIntent(SourceId, velocity, Priority, useSharedSmoothing: false);
         }
 
+        public TimedMovement GetTimedMovement(in MovementIntent continuation)
+        {
+            if (stepDuration <= 0f || dashSpeed <= 0f)
+                return new TimedMovement(Vector3.zero, Vector3.zero, 0f);
+            // Do not slow below the requested ordinary movement while a direction is held.
+            // The next offer supplies its own speed; Dash does not need to know Walk or Run.
+            float minimumMultiplier = continuation.IsValid
+                ? Mathf.Clamp01(continuation.PlanarVelocity.magnitude / dashSpeed) : 0f;
+            float area = IntegrateSpeedCurve(stepStart, stepEnd, minimumMultiplier);
+            Vector3 average = dashDirection * (dashSpeed * activeDuration * area / stepDuration);
+            Vector3 exit = dashDirection * (dashSpeed * Mathf.Max(minimumMultiplier, SafeCurveValue(stepEnd)));
+            return new TimedMovement(average, exit, stepDuration);
+        }
+
         private void ResetDash()
         {
             // Re-enabling starts fresh, including recovery. Earlier button presses are not replayed.
             remainingDuration = CooldownRemaining = 0f;
+            activeDuration = 0f;
+            stepDuration = 0f;
             lastDirection = Vector3.forward;
             lastPressCount = context != null && context.Input != null ? context.Input.DashPressCount : 0;
             lastResetVersion = context != null && context.Input != null ? context.Input.DashInputResetVersion : 0;
@@ -149,7 +176,7 @@ namespace ModularMovement
         }
 
         // The Inspector reuses this calculation to preview distance without moving the player.
-        internal float IntegrateSpeedCurve(float start, float end)
+        internal float IntegrateSpeedCurve(float start, float end, float minimumMultiplier = 0f)
         {
             // Without a curve, use full speed throughout the requested part of the burst.
             if (speedCurve == null || speedCurve.length == 0) return end - start;
@@ -164,8 +191,8 @@ namespace ModularMovement
                 float right = (float)(index + 1) / slices;
                 float from = Mathf.Max(start, left);
                 float to = Mathf.Min(end, right);
-                float leftValue = SafeCurveValue(left);
-                float rightValue = SafeCurveValue(right);
+                float leftValue = Mathf.Max(minimumMultiplier, SafeCurveValue(left));
+                float rightValue = Mathf.Max(minimumMultiplier, SafeCurveValue(right));
                 // Include only the part of each small slice that belongs to this movement step.
                 float fromValue = Mathf.Lerp(leftValue, rightValue, (from - left) * slices);
                 float toValue = Mathf.Lerp(leftValue, rightValue, (to - left) * slices);
@@ -177,6 +204,7 @@ namespace ModularMovement
 
         private float SafeCurveValue(float time)
         {
+            if (speedCurve == null || speedCurve.length == 0) return 1f;
             float value = speedCurve.Evaluate(time);
             // A curve cannot reverse the dash or exceed Dash Speed.
             return float.IsNaN(value) || float.IsInfinity(value) ? 1f : Mathf.Clamp01(value);

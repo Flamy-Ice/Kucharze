@@ -68,6 +68,11 @@ namespace ModularMovement.Editor
                 if (rotation != null && rotation.GetComponent<PlayerContext>() == null)
                     Arrange(rotation.gameObject);
             }
+            foreach (PlayerAnimation animation in Resources.FindObjectsOfTypeAll<PlayerAnimation>())
+            {
+                if (animation != null && animation.GetComponent<PlayerContext>() == null)
+                    Arrange(animation.gameObject);
+            }
         }
 
         public static void Arrange(GameObject player)
@@ -153,17 +158,18 @@ namespace ModularMovement.Editor
             if (component is PlayerBus) return 2;
             if (component is PlayerMovementResolver) return 3;
             if (component is PlayerStates) return 4;
-            if (component is PlayerInputActions) return 5;
-            if (component is PlayerGravity) return 6;
-            if (component is PlayerMotor) return 7;
-            if (component is PlayerRotation) return 8;
-            if (component is PlayerHorizontalMovement) return 9;
-            if (component is PlayerWalk) return 10;
-            if (component is PlayerRun) return 11;
-            if (component is PlayerDash) return 12;
+            if (component is PlayerAnimation) return 5;
+            if (component is PlayerInputActions) return 6;
+            if (component is PlayerGravity) return 7;
+            if (component is PlayerMotor) return 8;
+            if (component is PlayerRotation) return 9;
+            if (component is PlayerHorizontalMovement) return 10;
+            if (component is PlayerWalk) return 11;
+            if (component is PlayerRun) return 12;
+            if (component is PlayerDash) return 13;
             // Future abilities stay together, with the diagnostic view below the movement group.
-            if (component is IMovementProvider) return 13;
-            if (component is PlayerMovementDebug) return 14;
+            if (component is IMovementProvider) return 14;
+            if (component is PlayerMovementDebug) return 15;
             // A negative rank leaves components outside the movement group untouched.
             return -1;
         }

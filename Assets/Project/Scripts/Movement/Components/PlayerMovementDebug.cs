@@ -8,8 +8,8 @@ namespace ModularMovement
 {
     // Attach this to Player, alongside its movement components. It only shows their data.
     [DisallowMultipleComponent]
-    // Read visual facing after PlayerRotation's default LateUpdate has applied its turn.
-    [DefaultExecutionOrder(100)]
+    // Read the visuals after PlayerRotation and PlayerAnimation finish their LateUpdate work.
+    [DefaultExecutionOrder(200)]
     [AddComponentMenu("Movement/Player Movement Debug")]
     public sealed class PlayerMovementDebug : MonoBehaviour
     {
@@ -45,6 +45,8 @@ namespace ModularMovement
         [SerializeField] private bool showRun = true;
         [SerializeField] private bool showDash = true;
         [SerializeField] private bool showRotation = true;
+        [SerializeField, Tooltip("Show the selected animation state.")]
+        private bool showAnimation = true;
         [SerializeField] private bool showGravity = true;
         [SerializeField] private bool showMotor = true;
 
@@ -242,6 +244,7 @@ namespace ModularMovement
             PlayerRun run = GetComponent<PlayerRun>();
             PlayerDash dash = GetComponent<PlayerDash>();
             PlayerRotation rotation = GetComponent<PlayerRotation>();
+            PlayerAnimation animation = GetComponent<PlayerAnimation>();
             PlayerGravity gravity = GetComponent<PlayerGravity>();
             PlayerMotor motor = GetComponent<PlayerMotor>();
             PlayerHorizontalMovement horizontal = GetComponent<PlayerHorizontalMovement>();
@@ -269,6 +272,9 @@ namespace ModularMovement
                 AppendBoolean("Moving", states.IsMoving);
                 AppendBoolean("Grounded", states.IsGrounded);
             }
+
+            if (showAnimation && animation != null)
+                AppendAnimation(animation);
 
             if (showInput && input != null)
             {
@@ -346,6 +352,18 @@ namespace ModularMovement
 
             // Keep one finished reading for drawing, which Unity may request several times per frame.
             terminalText = textBuilder.ToString();
+        }
+
+        // Show only the state chosen by this player's animation adapter.
+        private void AppendAnimation(PlayerAnimation animation)
+        {
+            AppendHeading("ANIMATION", "#FFB87A");
+            string selected = animation.CurrentState == PlayerAnimation.IdleState ? "Idle"
+                : animation.CurrentState == PlayerAnimation.RunState ? "Run"
+                : animation.CurrentState == PlayerAnimation.DashState ? "Dash" : "Unknown";
+            string color = selected == "Dash" ? "#61E8FF" : selected == "Run" ? "#F27891" : "#8C97A6";
+            textBuilder.Append("<b>Animation State:</b> <color=").Append(color).Append("><b>")
+                .Append(selected).Append("</b></color>\n");
         }
 
         private void AppendInputConfiguration(PlayerInputActions input)

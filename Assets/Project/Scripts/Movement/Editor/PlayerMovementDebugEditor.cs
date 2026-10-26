@@ -56,6 +56,7 @@ namespace ModularMovement.Editor
             columns.Add(right);
             sections.Add(columns);
             AddSectionToggle(left, "showTransform", "Transform", typeof(Transform));
+            AddSectionToggle(left, "showAnimation", "Animation", typeof(PlayerAnimation));
             AddSectionToggle(left, "showInput", "Input", typeof(PlayerInputActions));
             AddSectionToggle(left, "showMotor", "Motor", typeof(PlayerMotor));
             AddSectionToggle(left, "showHorizontalMovement", "Horizontal", typeof(PlayerHorizontalMovement));

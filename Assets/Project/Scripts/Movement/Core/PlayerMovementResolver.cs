@@ -92,7 +92,7 @@ namespace ModularMovement
                 // Read input once and give all providers the same starting information.
                 Vector2 input = context.Input.ReadSnapshot();
                 MovementStep step = new MovementStep(deltaTime, input, context.States.ActualVelocity, context.States.IsGrounded);
-                MovementIntent intent = Resolve(in step);
+                MovementIntent intent = Resolve(in step, out IMovementProvider provider, out MovementIntent continuation);
                 // Record the chosen source before the motor updates state and sends movement events.
                 string previousSource = context.States.ActiveMovementSource;
                 string source = intent.IsValid ? intent.SourceId : "None";
@@ -104,6 +104,8 @@ namespace ModularMovement
                         ? context.HorizontalMovement.CalculateVelocity(context.States.ActualVelocity, intent.PlanarVelocity, deltaTime)
                         : intent.PlanarVelocity)
                     : Vector3.zero;
+                if (provider is ITimedMovementProvider timedProvider)
+                    velocity = CalculateTimedVelocity(timedProvider, in continuation, velocity, deltaTime);
                 context.Motor.Move(velocity, deltaTime, previousSource);
 
                 // Notify listeners only on a change, after this step's state is fully updated.
@@ -119,10 +121,32 @@ namespace ModularMovement
             }
         }
 
-        private MovementIntent Resolve(in MovementStep step)
+        private Vector3 CalculateTimedVelocity(ITimedMovementProvider provider, in MovementIntent continuation,
+            Vector3 fallbackVelocity, float deltaTime)
+        {
+            TimedMovement movement;
+            try { movement = provider.GetTimedMovement(in continuation); }
+            catch (Exception) { return fallbackVelocity; }
+            if (!IsFinite(movement.Duration) || movement.Duration <= 0f || movement.Duration > deltaTime
+                || !IsPlanarFinite(movement.AverageVelocity) || !IsPlanarFinite(movement.ExitVelocity))
+                return fallbackVelocity;
+            float remainingTime = deltaTime - movement.Duration;
+            if (remainingTime <= 0f) return movement.AverageVelocity;
+            Vector3 target = continuation.IsValid ? continuation.PlanarVelocity : Vector3.zero;
+            Vector3 nextVelocity = !continuation.IsValid || continuation.UseSharedSmoothing
+                ? context.HorizontalMovement.CalculateVelocity(movement.ExitVelocity, target, remainingTime)
+                : target;
+            // Combine both distances before the single motor move, without losing the end of the frame.
+            return (movement.AverageVelocity * movement.Duration + nextVelocity * remainingTime) / deltaTime;
+        }
+
+        private MovementIntent Resolve(in MovementStep step, out IMovementProvider selectedProvider,
+            out MovementIntent continuation)
         {
             // Reuse the temporary lists, but discard proposals from the previous step.
             MovementIntent selected = MovementIntent.None;
+            selectedProvider = null;
+            continuation = MovementIntent.None;
             candidates.Clear();
             stepProviders.Clear();
             stepProviders.AddRange(providers);
@@ -176,9 +200,14 @@ namespace ModularMovement
                         continue;
                     MovementIntent candidate = entry.Value;
                     // Higher priority wins. Equal priorities use source-name order for a stable result.
-                    if (!selected.IsValid || candidate.Priority > selected.Priority ||
-                        (candidate.Priority == selected.Priority && string.CompareOrdinal(candidate.SourceId, selected.SourceId) < 0))
+                    if (Outranks(in candidate, in selected))
+                    {
+                        continuation = selected;
                         selected = candidate;
+                        selectedProvider = entry.Key;
+                    }
+                    else if (Outranks(in candidate, in continuation))
+                        continuation = candidate;
                 }
                 catch (Exception)
                 {
@@ -189,6 +218,13 @@ namespace ModularMovement
 
             return selected;
         }
+
+        private static bool Outranks(in MovementIntent candidate, in MovementIntent other)
+            => !other.IsValid || candidate.Priority > other.Priority ||
+                (candidate.Priority == other.Priority && string.CompareOrdinal(candidate.SourceId, other.SourceId) < 0);
+
+        private static bool IsPlanarFinite(Vector3 velocity)
+            => velocity.y == 0f && IsFinite(velocity.x) && IsFinite(velocity.z);
 
         private static bool IsValid(MovementIntent intent, IMovementProvider provider)
         {

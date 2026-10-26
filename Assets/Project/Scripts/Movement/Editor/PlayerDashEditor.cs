@@ -67,7 +67,7 @@ namespace ModularMovement.Editor
             AddField(card, "dashDuration", "Dash Duration", "s",
                 "How long a dash lasts. Direction stays fixed during the burst.");
             AddField(card, "speedCurve", "Speed Curve", null,
-                "Speed multiplier over dash time (0–1). Lower values shorten the burst distance.");
+                "Speed multiplier over dash time (0–1). Held movement sets a speed floor, up to Dash Speed.");
             AddField(card, "cooldown", "Cooldown", "s",
                 "Wait after a dash ends before another press can start one.");
             container.Add(card);
@@ -95,7 +95,7 @@ namespace ModularMovement.Editor
             row.style.marginTop = 8;
             row.style.marginBottom = 2;
             row.style.marginLeft = row.style.marginRight = 8;
-            var label = CreateLabel("Estimated Distance", 12, Text);
+            var label = CreateLabel("Base Distance", 12, Text);
             label.AddToClassList("unity-base-field__label");
             row.Add(label);
             var approximation = CreateLabel("\u2248", 12, Accent);
@@ -118,7 +118,8 @@ namespace ModularMovement.Editor
             row.Add(unit);
             container.Add(row);
             MovementInspectorLayout.FixedLabel(row);
-            MovementInspectorTooltips.LabelOnly(row, row, string.Empty);
+            MovementInspectorTooltips.LabelOnly(row, row,
+                "Curve distance before the held-movement speed floor and collisions.");
             UpdateEstimatedDistance();
         }
 

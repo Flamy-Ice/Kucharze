@@ -190,7 +190,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: PlayerMovementSystem3D::ModularMovement.PlayerRotation
   modelTransform: {fileID: 630236362483491714}
-  rotationSpeed: 720
+  rotationSpeed: 800
   finishRotationWhenStopped: 0
 --- !u!114 &6946450098152438137
 MonoBehaviour:
@@ -219,7 +219,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 65bb2644dd6fb7c4e874b0647d0d162f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: PlayerMovementSystem3D::ModularMovement.PlayerWalk
-  walkSpeed: 5.5
+  walkSpeed: 6
   alwaysFullWalkSpeed: 0
   legacyAcceleration: -1
   legacyDeceleration: -1
@@ -255,7 +255,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9e6198f00ac43738956f37a10033cce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: PlayerMovementSystem3D::ModularMovement.PlayerDash
-  dashSpeed: 10
+  dashSpeed: 13
   dashDuration: 0.4
   cooldown: 2.5
   speedCurve:

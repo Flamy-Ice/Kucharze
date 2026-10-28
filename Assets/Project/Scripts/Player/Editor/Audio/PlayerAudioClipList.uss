@@ -1,0 +1,75 @@
+/* Styles only the footstep clip list. Selected rows are slightly lighter; hovering keeps the same colors. */
+#walk-clips-list .unity-list-view__item,
+#walk-clips-list .unity-list-view__item:hover {
+    background-color: rgb(38, 38, 38);
+}
+
+#walk-clips-list .unity-list-view__item.unity-collection-view__item--selected,
+#walk-clips-list .unity-list-view__item.unity-collection-view__item--selected:hover {
+    background-color: rgb(43, 43, 43);
+}
+
+#walk-clips-list .unity-foldout__toggle,
+#walk-clips-list .unity-foldout__toggle:hover,
+#walk-clips-list .unity-foldout__input,
+#walk-clips-list .unity-foldout__input:hover,
+#walk-clips-list .unity-list-view__reorderable-item__container,
+#walk-clips-list .unity-list-view__reorderable-item__container:hover {
+    background-color: transparent;
+}
+
+#walk-clips-list .unity-base-field__label,
+#walk-clips-list .unity-foldout__text,
+#walk-clips-list .unity-object-field__object .unity-label {
+    color: rgb(235, 237, 242);
+}
+
+#walk-clips-list .unity-foldout__checkmark,
+#walk-clips-list .unity-object-field__selector {
+    -unity-background-image-tint-color: rgb(180, 180, 180);
+    background-color: transparent;
+}
+
+#walk-clips-list .unity-object-field__input,
+#walk-clips-list .unity-object-field__input:hover,
+#walk-clips-list .unity-base-text-field__input,
+#walk-clips-list .unity-base-text-field__input:hover {
+    background-color: rgb(34, 34, 34);
+    border-color: rgb(65, 65, 65);
+}
+
+#walk-clips-list .unity-object-field__object,
+#walk-clips-list .unity-object-field__object:hover {
+    background-color: transparent;
+}
+
+/* Keep a focus cue for editing without changing it when the pointer enters. */
+#walk-clips-list .unity-object-field:focus .unity-object-field__input,
+#walk-clips-list .unity-object-field__input:focus,
+#walk-clips-list .unity-base-text-field__input:focus {
+    border-color: rgb(100, 105, 118);
+}
+
+#walk-clips-list .unity-list-view__footer .unity-button:enabled,
+#walk-clips-list .unity-list-view__footer .unity-button:enabled:hover {
+    color: rgb(210, 210, 210);
+    background-color: rgb(36, 36, 36);
+    border-color: rgb(54, 54, 54);
+}
+
+#walk-clips-list .unity-list-view__reorderable-item__handle-bar,
+#walk-clips-list .unity-list-view__reorderable-item__handle-bar:hover {
+    background-color: rgb(102, 102, 102);
+}
+
+/* Preserve muted labels and icons when editing is disabled. */
+#walk-clips-list .unity-base-field:disabled .unity-base-field__label,
+#walk-clips-list .unity-object-field:disabled .unity-label,
+#walk-clips-list .unity-foldout:disabled .unity-foldout__text {
+    color: rgb(128, 128, 128);
+}
+
+#walk-clips-list .unity-foldout:disabled .unity-foldout__checkmark,
+#walk-clips-list .unity-object-field:disabled .unity-object-field__selector {
+    -unity-background-image-tint-color: rgb(100, 100, 100);
+}

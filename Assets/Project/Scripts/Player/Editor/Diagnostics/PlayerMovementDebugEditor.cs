@@ -52,10 +52,12 @@ namespace ModularMovement.Editor
             columns.style.flexDirection = FlexDirection.Row;
             columns.style.flexWrap = Wrap.Wrap;
             sections.Add(columns);
+            // These switches only change the panel, not the components they describe.
             AddSectionToggle(columns, "showTransform", "Transform", typeof(Transform));
             AddSectionToggle(columns, "showStates", "States", typeof(PlayerStates));
             AddSectionToggle(columns, "showAnimation", "Animation", typeof(PlayerAnimation));
             AddSectionToggle(columns, "showAudio", "Audio", typeof(PlayerAudio));
+            AddSectionToggle(columns, "showVFX", "VFX", typeof(PlayerVFX));
             AddSectionToggle(columns, "showInput", "Input", typeof(PlayerInputActions));
             AddSectionToggle(columns, "showGravity", "Gravity", typeof(PlayerGravity));
             AddSectionToggle(columns, "showMotor", "Motor", typeof(PlayerMotor));
@@ -240,6 +242,7 @@ namespace ModularMovement.Editor
             return toggle;
         }
 
+        // When several players are selected, offer only sections that all of them can show.
         private bool HasComponentOnEveryTarget(Type componentType)
         {
             foreach (UnityEngine.Object selected in targets)

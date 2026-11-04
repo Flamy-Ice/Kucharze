@@ -78,6 +78,12 @@ namespace ModularMovement.Editor
                 if (audio != null && audio.GetComponent<PlayerContext>() == null)
                     Arrange(audio.gameObject);
             }
+            // VFX can exist without the movement foundation and still needs the same Inspector order.
+            foreach (PlayerVFX vfx in Resources.FindObjectsOfTypeAll<PlayerVFX>())
+            {
+                if (vfx != null && vfx.GetComponent<PlayerContext>() == null)
+                    Arrange(vfx.gameObject);
+            }
         }
 
         public static void Arrange(GameObject player)
@@ -165,17 +171,19 @@ namespace ModularMovement.Editor
             if (component is PlayerStates) return 4;
             if (component is PlayerAnimation) return 5;
             if (component is PlayerAudio) return 6;
-            if (component is PlayerInputActions) return 7;
-            if (component is PlayerGravity) return 8;
-            if (component is PlayerMotor) return 9;
-            if (component is PlayerRotation) return 10;
-            if (component is PlayerHorizontalMovement) return 11;
-            if (component is PlayerWalk) return 12;
-            if (component is PlayerRun) return 13;
-            if (component is PlayerDash) return 14;
+            // Keep VFX after Audio without changing the remaining components' relative order.
+            if (component is PlayerVFX) return 7;
+            if (component is PlayerInputActions) return 8;
+            if (component is PlayerGravity) return 9;
+            if (component is PlayerMotor) return 10;
+            if (component is PlayerRotation) return 11;
+            if (component is PlayerHorizontalMovement) return 12;
+            if (component is PlayerWalk) return 13;
+            if (component is PlayerRun) return 14;
+            if (component is PlayerDash) return 15;
             // Future abilities stay together, with the diagnostic view below the movement group.
-            if (component is IMovementProvider) return 15;
-            if (component is PlayerMovementDebug) return 16;
+            if (component is IMovementProvider) return 16;
+            if (component is PlayerMovementDebug) return 17;
             // A rank below zero means this component keeps its place in the Inspector.
             return -1;
         }

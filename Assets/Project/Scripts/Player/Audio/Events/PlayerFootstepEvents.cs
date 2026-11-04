@@ -3,16 +3,19 @@ using UnityEngine;
 
 namespace ModularMovement
 {
-    // Tells PlayerAudio when an animation marker says a foot touches the ground.
+    // Shares footstep animation markers with this player's audio and VFX.
     [DisallowMultipleComponent, AddComponentMenu("")]
+    // Unity sends clip markers to the Animator's own object, so the receiver belongs beside it.
     [RequireComponent(typeof(Animator))]
     public sealed class PlayerFootstepEvents : MonoBehaviour
     {
         internal event Action Footstep;
 
-        // Select this function for both left-foot and right-foot Animation Events.
+        // Place an OnFootstep marker where each foot touches the ground in the clip.
+        // Audio and VFX both listen here, so the clip needs only one marker per contact.
         public void OnFootstep()
         {
+            // Ignore animation previews in the Editor and a disabled receiver.
             if (Application.isPlaying && isActiveAndEnabled) Footstep?.Invoke();
         }
     }

@@ -50,6 +50,8 @@ namespace ModularMovement
         private bool showAnimation = true;
         [SerializeField, Tooltip("Show only the names of this player's currently playing sounds.")]
         private bool showAudio = true;
+        [SerializeField, Tooltip("Show this player's VFX maximum lifetime and active Run/Dash instance counts.")]
+        private bool showVFX = true;
         [SerializeField, Tooltip("Show falling speed and ground-contact settings.")] private bool showGravity = true;
         [SerializeField, Tooltip("Show the smallest speed counted as movement.")] private bool showMotor = true;
 
@@ -287,6 +289,12 @@ namespace ModularMovement
                 if (audio != null) AppendAudio(audio);
             }
 
+            if (showVFX)
+            {
+                PlayerVFX vfx = GetComponent<PlayerVFX>();
+                if (vfx != null) AppendVFX(vfx);
+            }
+
             if (showInput && input != null)
             {
                 AppendHeading("INPUT", "#5CC2FF");
@@ -388,6 +396,17 @@ namespace ModularMovement
                     .Append(EscapeRichText(playingAudioClips[index].name)).Append("</b></color>");
                 hasSound = true;
             }
+        }
+
+        // Read existing effect copies without starting, stopping or refreshing them.
+        private void AppendVFX(PlayerVFX vfx)
+        {
+            AppendHeading("VFX", "#FFB359");
+            AppendNumber("Maximum Lifetime", vfx.MaximumLifetime, "s");
+            // A graph copy can remain counted after its visible particles have disappeared.
+            vfx.GetActiveInstanceCounts(out int runCount, out int dashCount);
+            textBuilder.AppendFormat(CultureInfo.InvariantCulture,
+                "<b>Active Instances:</b> Run {0}, Dash {1}\n", runCount, dashCount);
         }
 
         // Show only the state chosen by this player's animation adapter.

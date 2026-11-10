@@ -99,3 +99,19 @@ Przyszła mechanika określi, kiedy zwiększyć wynik; sam licznik nie podejmuje
   w tekście dotyczyły poprzedniego formatu, bez sufiksu.
 - Przegląd kodu: sufiks jest dodawany przy każdym odświeżeniu, także dla wartości zerowej.
 - Nie uruchomiono Play Mode ani ponownej kompilacji dla tej zmiany tekstu.
+
+## Przegląd CoinWallet i CoinDisplay — 2026-11-10
+
+- Uzupełniono krótkie komentarze: inicjalizacja, odrzucanie nieprawidłowych kwot,
+  powiadamianie widoku, włączanie i odłączanie widoku oraz stały format waluty.
+  Istniejące podpowiedzi wszystkich pól pozostawiono bez powielania.
+- SRP: CoinWallet przechowuje sumę, CoinDisplay tylko ją prezentuje. Inne systemy nie wymagają zmian.
+- Nie znaleziono martwego kodu. TryAddCoins jest przygotowanym wejściem dla przyszłej mechaniki;
+  aktualne wyszukiwanie w C# nie znalazło jego zewnętrznych wywołań. Nie sprawdzano przypisań scen i prefabów.
+- Domyślne 0 i całkowite kwoty pozostawiono. Limit int chroni przed przepełnieniem.
+- RequireComponent nie jest potrzebny: CoinWallet nie wymaga innych komponentów,
+  a CoinDisplay może czytać portfel i tekst z osobnych obiektów. Nie wymusza się lokalnych kopii.
+- Nie zmieniano logiki. Widok nadal odświeża tekst przez zdarzenia zamiast sprawdzać go co klatkę.
+- Kompilacja obu komponentów przeciwko zainstalowanym bibliotekom Unity i TextMeshPro: poprawna.
+  Sprawdzenie wyrażenia formatującego: `0$`, `125$`, `2147483647$`.
+- Nie uruchomiono Play Mode ani kontroli wizualnej w Unity. Tymczasowe pliki kompilacji usunięto.

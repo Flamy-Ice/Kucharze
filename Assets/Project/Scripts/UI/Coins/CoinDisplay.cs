@@ -24,6 +24,7 @@ namespace ModularMovement
             coinText = GetComponent<TMP_Text>();
         }
 
+        // Unity calls this whenever the display is enabled, including after it was hidden.
         private void OnEnable()
         {
             if (coinText == null)
@@ -31,7 +32,7 @@ namespace ModularMovement
             if (wallet == null)
                 wallet = GetComponentInParent<CoinWallet>();
 
-            // Remember the source we actually subscribed to, so disabling always disconnects it.
+            // Remember which wallet we listen to, so we can stop listening to that same wallet later.
             subscribedWallet = wallet;
             if (subscribedWallet != null)
                 subscribedWallet.CoinsChanged += UpdateDisplay;
@@ -40,6 +41,7 @@ namespace ModularMovement
             UpdateDisplay(subscribedWallet != null ? subscribedWallet.Coins : 0);
         }
 
+        // Stop receiving changes while this display is disabled or being removed.
         private void OnDisable()
         {
             if (subscribedWallet != null)
@@ -49,6 +51,7 @@ namespace ModularMovement
 
         private void UpdateDisplay(int coins)
         {
+            // Use the same number format on every computer and keep the currency sign at the end.
             if (coinText != null)
                 coinText.text = coins.ToString(CultureInfo.InvariantCulture) + "$";
         }

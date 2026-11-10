@@ -17,9 +17,10 @@ namespace ModularMovement
         // Reading the total is safe even before Unity has called Awake on this object.
         public int Coins => initialized ? coins : Mathf.Max(0, startingCoins);
 
-        // Only this wallet announces changes, so each UI can listen to its own source.
+        // Tells listening displays the new total whenever coins are added successfully.
         public event Action<int> CoinsChanged;
 
+        // Unity calls this once when the object first loads.
         private void Awake()
         {
             Initialize();
@@ -30,6 +31,7 @@ namespace ModularMovement
         public bool TryAddCoins(int amount)
         {
             Initialize();
+            // Reject the whole increase if it is not positive or cannot fit in a whole-number total.
             if (amount <= 0 || amount > int.MaxValue - coins)
                 return false;
 
@@ -44,6 +46,7 @@ namespace ModularMovement
             if (initialized)
                 return;
 
+            // Even an invalid saved starting value must not make the counter negative.
             coins = Mathf.Max(0, startingCoins);
             initialized = true;
         }

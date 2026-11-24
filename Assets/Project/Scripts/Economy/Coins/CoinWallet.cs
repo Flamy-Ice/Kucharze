@@ -14,6 +14,18 @@ namespace ModularMovement
         private int coins;
         private bool initialized;
 
+        // Online clients display a server total and cannot award coins themselves.
+        public bool CanAwardCoins { get; set; } = true;
+
+        public void ApplyReplicatedCoins(int total)
+        {
+            if (CanAwardCoins || total < 0) return;
+            Initialize();
+            if (coins == total) return;
+            coins = total;
+            CoinsChanged?.Invoke(coins);
+        }
+
         // Reading the total is safe even before Unity has called Awake on this object.
         public int Coins => initialized ? coins : Mathf.Max(0, startingCoins);
 
@@ -30,6 +42,7 @@ namespace ModularMovement
         // False means nothing was added: the amount was invalid or the total would exceed the limit.
         public bool TryAddCoins(int amount)
         {
+            if (!CanAwardCoins) return false;
             Initialize();
             // Reject the whole increase if it is not positive or cannot fit in a whole-number total.
             if (amount <= 0 || amount > int.MaxValue - coins)

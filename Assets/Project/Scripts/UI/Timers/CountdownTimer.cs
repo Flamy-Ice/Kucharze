@@ -19,6 +19,17 @@ namespace ModularMovement
 
         private float remainingSeconds;
         private bool isRunning;
+
+        // A shared online timer advances only on the server.
+        public bool CanControlTimer { get; set; } = true;
+
+        public void ApplyReplicatedTime(float seconds, bool running)
+        {
+            if (CanControlTimer || float.IsNaN(seconds) || float.IsInfinity(seconds)) return;
+            remainingSeconds = Mathf.Max(0f, seconds);
+            isRunning = running && remainingSeconds > 0f;
+            UpdateDisplay();
+        }
         // Remember the last number shown to avoid rewriting the text every frame.
         private int lastDisplayedSeconds = -1;
 
@@ -45,7 +56,7 @@ namespace ModularMovement
 
         private void Update()
         {
-            if (!isRunning)
+            if (!CanControlTimer || !isRunning)
                 return;
 
             // Subtract the time since the last frame. The game's time scale also affects this timer.
@@ -60,18 +71,21 @@ namespace ModularMovement
         // Keep the remaining time so it can be continued later.
         public void PauseTimer()
         {
+            if (!CanControlTimer) return;
             isRunning = false;
         }
 
         // A finished countdown stays stopped until it is restarted.
         public void ResumeTimer()
         {
+            if (!CanControlTimer) return;
             isRunning = remainingSeconds > 0f;
         }
 
         // Restore the configured duration and start again, even if automatic start is off.
         public void RestartTimer()
         {
+            if (!CanControlTimer) return;
             remainingSeconds = Mathf.Max(0f, durationSeconds);
             isRunning = remainingSeconds > 0f;
             lastDisplayedSeconds = -1;

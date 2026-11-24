@@ -40,6 +40,25 @@ namespace ModularMovement
         // Remember when settings need checking and when a previous setup attempt failed.
         private bool configurationDirty = true;
         private bool initializationFailed;
+        private IPlayerInputSource externalSource;
+
+        // A remote source replaces device readings only for this player.
+        public void SetExternalSource(IPlayerInputSource source)
+        {
+            externalSource = source;
+            UpdateMapState();
+        }
+
+        public PlayerInputSnapshot CaptureSnapshot()
+        {
+            ReadSnapshot();
+            return new PlayerInputSnapshot
+            {
+                Move = MoveInput, RunHeld = RunHeld, RunPressCount = RunPressCount,
+                DashPressCount = DashPressCount, ResetVersion = InputResetVersion,
+                DashResetVersion = DashInputResetVersion, DashAvailable = DashInputAvailable
+            };
+        }
 
         // The latest reading: X is left/right and Y is forward/backward input.
         // PlayerWalk maps these values onto the ground; this component does not choose world directions.
@@ -173,6 +192,23 @@ namespace ModularMovement
         // The resolver reads once per step, then gives all movement modules the same input.
         internal Vector2 ReadSnapshot()
         {
+            if (isActiveAndEnabled && externalSource != null)
+            {
+                PlayerInputSnapshot snapshot = externalSource.ReadInput();
+                Vector2 direction = snapshot.Move;
+                if (float.IsNaN(direction.x) || float.IsNaN(direction.y)
+                    || float.IsInfinity(direction.x) || float.IsInfinity(direction.y))
+                    direction = Vector2.zero;
+                MoveInput = Vector2.ClampMagnitude(direction, 1f);
+                if (MoveInput.magnitude <= inputDeadzone) MoveInput = Vector2.zero;
+                RunHeld = snapshot.RunHeld;
+                RunPressCount = snapshot.RunPressCount;
+                DashPressCount = snapshot.DashPressCount;
+                InputResetVersion = snapshot.ResetVersion;
+                DashInputResetVersion = snapshot.DashResetVersion;
+                DashInputAvailable = snapshot.DashAvailable;
+                return MoveInput;
+            }
             if (!isActiveAndEnabled || !inputEnabled || !hasFocus || isPaused)
                 return ClearInput();
 
@@ -286,7 +322,7 @@ namespace ModularMovement
             if (moveMap == null)
                 return;
 
-            if (isActiveAndEnabled && inputEnabled && hasFocus && !isPaused)
+            if (isActiveAndEnabled && externalSource == null && inputEnabled && hasFocus && !isPaused)
                 moveMap.Enable();
             else
                 moveMap.Disable();

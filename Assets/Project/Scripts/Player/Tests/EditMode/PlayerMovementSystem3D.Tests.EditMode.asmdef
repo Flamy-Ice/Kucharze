@@ -1,0 +1,7 @@
+{
+  "name": "PlayerMovementSystem3D.Tests.EditMode",
+  "rootNamespace": "ModularMovement.Tests",
+  "references": ["PlayerMovementSystem3D"],
+  "includePlatforms": ["Editor"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}

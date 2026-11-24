@@ -9,7 +9,18 @@ HUD
     Menu button
         Functionality
     Action Buttons
-        OnClick = Ciemniejszy
         Functionality
         
 Main Menu
+
+Kamera niech porusza się za graczami
+
+Mati
+    PlayerAudio
+        Kroki
+        Dash
+
+Szymon
+    PlayerVFX
+        Kroki
+        Dash

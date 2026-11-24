@@ -20,6 +20,23 @@ namespace ModularMovement
         // The selected module's name. A selected module can still request zero velocity.
         public string ActiveMovementSource { get; private set; } = "None";
 
+        // Replicas display server results; they never run the local movement simulation.
+        public bool IsReplica { get; private set; }
+        public float ReplicaDashProgress { get; private set; }
+
+        public void ApplyReplica(Vector3 velocity, bool moving, bool grounded, string source, float dashProgress)
+        {
+            PlayerMovementResolver resolver = GetComponent<PlayerMovementResolver>();
+            if (resolver == null || resolver.SimulationEnabled) return;
+            IsReplica = true;
+            ActualVelocity = velocity;
+            PlanarSpeed = new Vector2(velocity.x, velocity.z).magnitude;
+            IsMoving = moving;
+            IsGrounded = grounded;
+            ActiveMovementSource = string.IsNullOrWhiteSpace(source) ? "None" : source;
+            ReplicaDashProgress = Mathf.Clamp01(dashProgress);
+        }
+
         // The resolver records its choice. Only the resolver on this player may write it.
         internal void SetActiveMovementSource(PlayerMovementResolver owner, string sourceId)
         {
@@ -42,6 +59,7 @@ namespace ModularMovement
             }
 
             ActualVelocity = result.ActualVelocity;
+            IsReplica = false;
             // Ignore vertical speed when deciding whether the player is moving along the ground.
             PlanarSpeed = new Vector2(ActualVelocity.x, ActualVelocity.z).magnitude;
             // Tiny horizontal movements below or equal to the motor's threshold count as stopped.

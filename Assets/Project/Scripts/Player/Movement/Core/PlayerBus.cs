@@ -46,6 +46,13 @@ namespace ModularMovement
 
         internal void PublishDashStarted() => Publish(DashStarted);
 
+        // A replica receives accepted effects from the server, without starting an ability locally.
+        public void ReceiveReplicaDash()
+        {
+            PlayerStates states = GetComponent<PlayerStates>();
+            if (states != null && states.IsReplica) PublishDashStarted();
+        }
+
         private void Publish(Action listeners)
         {
             if (listeners == null) return;

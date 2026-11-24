@@ -21,6 +21,9 @@ namespace ModularMovement
         private PlayerContext context;
         private bool isStepping;
 
+        // A network adapter blocks simulation on copies that only display server results.
+        public bool SimulationEnabled { get; set; } = true;
+
         // Other scripts may read this list; Register and Unregister control who can offer movement.
         public IReadOnlyList<IMovementProvider> Providers => providers.AsReadOnly();
 
@@ -71,7 +74,7 @@ namespace ModularMovement
         internal void Step(float deltaTime)
         {
             // Ignore invalid time and prevent another movement step from starting before this one ends.
-            if (!isActiveAndEnabled || isStepping || deltaTime <= 0f || !IsFinite(deltaTime))
+            if (!SimulationEnabled || !isActiveAndEnabled || isStepping || deltaTime <= 0f || !IsFinite(deltaTime))
                 return;
 
             if (context == null)

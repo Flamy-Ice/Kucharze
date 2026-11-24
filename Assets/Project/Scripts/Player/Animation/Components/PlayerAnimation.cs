@@ -157,7 +157,9 @@ namespace ModularMovement
             {
                 if (dash == null) dash = GetComponent<PlayerDash>();
                 // Progress 0 shows the clip's beginning; 1 shows its end, whatever the dash duration.
-                animator.SetFloat(DashProgressParameter, CurrentState == DashState && dash != null ? dash.DashProgress : 0f);
+                float progress = states != null && states.IsReplica ? states.ReplicaDashProgress
+                    : dash != null ? dash.DashProgress : 0f;
+                animator.SetFloat(DashProgressParameter, CurrentState == DashState ? progress : 0f);
             }
             // A multiplier of 1 plays Run normally; 0.5 plays it at half speed.
             // Only the Run state uses this value, so Idle and Dash keep their own timing.

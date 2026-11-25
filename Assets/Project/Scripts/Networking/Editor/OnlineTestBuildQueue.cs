@@ -13,6 +13,8 @@ public static class OnlineTestBuildQueue
     private const string StageKey = "Kucharze.OnlineTestBuild.Stage";
     private const string ReportKey = "Kucharze.OnlineTestBuild.Report";
     private const string ErrorKey = "Kucharze.OnlineTestBuild.Error";
+    private const string ScenesKey = "Kucharze.OnlineTestBuild.Scenes";
+    private const string NameKey = "Kucharze.OnlineTestBuild.Name";
     private enum Stage { None, Refresh, Compiling, Reload, Ready, Building, Linking }
     private static double readyAt;
 
@@ -34,7 +36,7 @@ public static class OnlineTestBuildQueue
             EditorApplication.delayCall += OnReloaded;
     }
 
-    public static void Request(string reportPath)
+    public static void Request(string reportPath, string[] scenePaths = null, string buildName = "KucharzeOnlineTest")
     {
         if (Current != Stage.None || BuildPipeline.isBuildingPlayer)
             throw new InvalidOperationException("An online test build is already queued or running.");
@@ -43,6 +45,8 @@ public static class OnlineTestBuildQueue
         if (!File.Exists(OnlineTestSetup.ScenePath))
             throw new FileNotFoundException("Prepare the online test scene first.");
         SessionState.SetString(ReportKey, reportPath ?? "");
+        SessionState.SetString(ScenesKey, string.Join("|", scenePaths ?? new[] { OnlineTestSetup.ScenePath }));
+        SessionState.SetString(NameKey, buildName);
         SessionState.SetString(ErrorKey, "");
         Current = Stage.Refresh;
         WriteReport("QUEUED: waiting for script compilation and assembly reload.");
@@ -72,11 +76,12 @@ public static class OnlineTestBuildQueue
             if (EditorUtility.scriptCompilationFailed)
                 throw new InvalidOperationException("Fix the script compilation errors before building.");
             Current = Stage.Building;
-            string output = Path.Combine(Path.GetTempPath(), "KucharzeOnlineTest", "KucharzeOnlineTest.exe");
+            string buildName = SessionState.GetString(NameKey, "KucharzeOnlineTest");
+            string output = Path.Combine(Path.GetTempPath(), buildName, buildName + ".exe");
             Directory.CreateDirectory(Path.GetDirectoryName(output));
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
             {
-                scenes = new[] { OnlineTestSetup.ScenePath }, locationPathName = output,
+                scenes = SessionState.GetString(ScenesKey, OnlineTestSetup.ScenePath).Split('|'), locationPathName = output,
                 target = BuildTarget.StandaloneWindows64, options = BuildOptions.Development
             });
             if (report.summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded)

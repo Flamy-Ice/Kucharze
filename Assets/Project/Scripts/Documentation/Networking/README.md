@@ -1,5 +1,58 @@
 # Pierwsza gra online — host i kod Relay
 
+## Planowane lobby — ustalone wymagania
+
+Docelowa gra jest wyłącznie wieloosobowa dla 2–4 graczy, licząc hosta. Host może czekać sam w lobby, ale nie może rozpocząć rozgrywki w pojedynkę. Działanie komponentów bez adapterów sieciowych pozostaje przydatne do testów i nie oznacza dostępnego trybu singleplayer.
+
+Lobby jest przestrzenią dla 2–4 graczy z czterema otwartymi pokojami: po dwa z lewej i prawej strony wspólnego korytarza. Przednia część holu ma mały salon, a z tyłu znajduje się osobny zielony pokój gotowości. Mapa ma około 22.8 × 15 m. Spawny pozostają osobnymi znacznikami; każdy uczestnik dostaje pierwszy wolny pokój, może odwiedzać cudze pokoje i zachowuje przypisanie przy powrocie z rundy. Wyposażenie jest dekoracyjne i nie dodaje interakcji.
+
+Po porównaniu z referencjami użytkownik upoważnił również poprawę prefabu i całej oprawy. LobbyCamera.prefab używa teraz łagodnej perspektywy: kąt X = 45°, Y/Z = 0° i pionowe Field of View = 15°. LobbyCameraFraming dopasowuje odległość do stałych granic planszy i proporcji okna, zostawiając miejsce na HUD. Nie śledzi gracza ani nie obraca kamery podczas gry; po zmianie rozmiaru okna koryguje wyłącznie kadr. Jest to świadoma zmiana wcześniejszej kamery ortograficznej, zgodna z najnowszą zgodą użytkownika.
+
+Osobne pomieszczenie służy do rozpoczęcia gry: wszyscy obecni gracze muszą do niego wejść i pozostać w nim przez pełne 5 sekund. Przy czterech graczach obecność trzech w tym pomieszczeniu nie wystarcza. Wyjście choć jednej osoby ze strefy, dołączenie nowej osoby lub rozłączenie uczestnika zeruje odliczanie. Po zmianie składu sprawdzamy ponownie wszystkich aktualnych uczestników: jeśli jest ich co najmniej dwóch i wszyscy są w strefie, rozpoczyna się nowe pełne odliczanie. Jedna osoba nigdy nie uruchamia rozgrywki. Warunki i odliczanie rozstrzyga serwer.
+
+Dołączanie jest dostępne wyłącznie w lobby; po rozpoczęciu przejścia do rozgrywki należy je zablokować. Kod dołączenia jest widoczny na dole ekranu. Na górze znajduje się angielski komunikat o stanie pomieszczenia startowego, liczbie obecnych w nim uczestników i odliczaniu.
+
+Po odliczaniu wszyscy przechodzą do sceny `Kuba`; nazwa sceny docelowej jest konfigurowalna, ponieważ zostanie później zmieniona. Po zakończeniu rundy uczestnicy wracają do lobby. Jeśli podczas rozgrywki zostanie tylko jeden gracz, również wraca do lobby. Wyjście hosta nadal kończy sesję zgodnie z istniejącym modelem bez przejmowania hosta. Docelowo koniec rundy obsłuży przyszły ekran podsumowania. Obecny CountdownTimer pokazuje czas i sam nie przełącza scen.
+
+Powyżej opisano ustalone wymagania. Zakres przygotowanego prototypu jest opisany poniżej, a rzeczywiście wykonane testy w Validation.md.
+
+## Prosta scena lobby
+
+Generator `Networking/Editor/LobbySceneSetup.cs` tworzy osobny zestaw w `Networking/Lobby/Generated/`, bez nadpisywania oryginalnej sceny Kuba i istniejącego testu online:
+
+- `Lobby.unity`: cztery umeblowane pokoje wokół wspólnego korytarza i salonu, zielony pokój gotowości, oświetlenie oraz znaczniki. Oprawa znajduje się pod `LobbyPresentation`, materiały w `Generated/Presentation/`.
+- `Round/Kuba.unity`: kopia istniejącej sceny OnlineTest, bez jej NetworkManagera i z punktami wejścia do rozgrywki. Kopia nie aktualizuje się automatycznie po zmianach oryginału.
+- `LobbyPlayer.prefab`: kopia gracza online z zachowanym ruchem i rigem, dopasowaną skalą grafiki, wydzielonymi materiałami stroju i pierścieniem przy stopach. `PlayerNetworkAppearance` otrzymuje od serwera paletę odpowiadającą pokojowi. Barwi właściwy renderer przez MaterialPropertyBlock, bez zmieniania wspólnego materiału innych graczy.
+- `LobbyCamera.prefab`: wspólna definicja projekcji, kadrowania i lokalnego profilu rysowania lobby.
+- `LobbySession.prefab`: ustawienia scen i pięciosekundowego oczekiwania.
+- `LobbyConnection.prefab` oraz `LobbyNetworkPrefabs.asset`: połączenie Relay, menu prototypowe i rejestr prefabów.
+
+`LobbyEntry` tworzy połączenie tylko wtedy, gdy nie ma istniejącego NetworkManagera. Powrót do lobby zachowuje bieżącą sesję i kod. `LobbySessionBootstrap` tworzy serwerowy obiekt sesji i odrzuca dołączenia poza lobby oraz powyżej czterech graczy. `LobbyLayout` przechowuje znaczniki i sprawdza obecność punktu gracza w prostopadłościennej strefie; nie wymaga Rigidbody ani zdarzeń fizycznych triggera. Liczy się pozycja głównego obiektu postaci, nie sam kontakt jej brzegu ze strefą.
+
+`LobbyRoomAssignments` na serwerze przydziela pierwszy wolny pokój, zachowuje przypisanie podczas przejść między scenami i ustawia pozycje przy wejściu do sceny. `LobbySession` sprawdza wszystkich uczestników i prowadzi wspólne odliczanie. Obecność jednej osoby, brak któregokolwiek uczestnika w strefie albo zmiana składu zeruje odliczanie. Zmiany scen wykonuje NGO, a ruch serwera jest wstrzymany podczas ich ładowania. Po wejściu do sceny gracz zostaje raz umieszczony przy swoim znaczniku; normalny ruch nadal wykonuje tylko PlayerMotor. `LobbyConnectionView` pokazuje angielską gotowość u góry i kod dołączenia u dołu również klientom. Panel IMGUI prototypu ma skalowane karty: gotowość i liczbę uczestników u góry oraz kod i przyciski połączenia na dole. Widok nie decyduje o gotowości ani zmianie scen.
+
+Przyszły ekran podsumowania powinien wywołać `LobbySession.ReturnToLobby()` na serwerze. Zwykły klient nie może wymusić tego przejścia. Brak podsumowania oznacza, że teraz nie ma automatycznego powrotu po upływie czasu rundy. Powrót po utracie pozostałych graczy działa niezależnie.
+
+### Otwórz i dostosuj scenę
+
+1. Zapisz własną scenę przez **File > Save**. W oknie **Project** otwórz `Assets > Project > Scripts > Networking > Lobby > Generated`, a następnie kliknij dwukrotnie `Lobby`.
+2. W **Hierarchy > LobbyMarkers** znajdziesz `Player1_Spawn_MoveMe` do `Player4_Spawn_MoveMe`. Przesuwaj je narzędziem **Move (W)** do docelowych pokojów. Punkt oznacza pozycję głównego obiektu gracza; przy obecnej kapsule wysokość Y wynosi `1.1`, aby jej dolna część znajdowała się nad podłogą.
+3. Zaznacz `StartZone_MoveAndResizeMe`. **Transform > Position** przesuwa strefę, a **Box Collider > Size** ustawia jej rozmiar w metrach. Pozostaw **Is Trigger** włączone. Zielona podłoga i oznaczenia miejsc znajdują się w `LobbyPresentation > ReadyRoomDecor`; po przeniesieniu strefy przenieś również tę grupę wizualną.
+4. Zaznacz `LobbyCamera` lub otwórz `Generated/LobbyCamera.prefab`. **Camera > Projection: Perspective > Field of View** ustawia delikatność perspektywy. **Lobby Camera Framing > Board Bounds** określa środek i rozmiar stałej planszy w metrach; na tej podstawie dobierana jest odległość kamery. Kamera nie śledzi postaci. **Lobby Camera Rendering > Shadow Distance** określa zasięg cieni w metrach.
+5. W oknie **Project** zaznacz `LobbySession.prefab`. Pola **Lobby Scene** i **Game Scene** zawierają pełne ścieżki scen. Po zmianie nazwy lub miejsca sceny popraw odpowiednią ścieżkę. **Ready Seconds** domyślnie wynosi `5`.
+6. Zapisz przez **Ctrl+S**, kliknij **Play**, a następnie **Host lobby**. Host pojawi się w swoim pokoju, kod będzie na dole, a napis u góry poprosi o drugiego gracza. Samotny host nie uruchomi rozgrywki.
+7. Drugi gracz uruchamia tę samą wersję gry, wpisuje kod w dolnym panelu i wybiera **Join lobby**. Do testu dwóch okien potrzebny jest build zawierający sceny `Generated/Lobby.unity` i `Generated/Round/Kuba.unity`, ze sceną Lobby jako pierwszą. Generator dodaje obie do wspólnej **File > Build Profiles > Open Scene List**, zachowując wcześniejsze pozycje; jeśli profil ma własną listę scen, dodaj je także tam. Dla prototypu zaznacz w tym profilu wyłącznie te dwie sceny, w tej kolejności.
+
+Materiały oprawy używają standardowego URP Simple Lit i miękkich cieni. LobbyCameraRendering stosuje osobne wywołania rysowania i odpowiedni zasięg cieni wyłącznie podczas rysowania kamery lobby oraz Scene View aktywnego lobby. Przy zakończeniu rysowania i wyłączeniu komponentu przywraca poprzednie wartości. Globalne assety pipeline pozostają bez zmian. W testowanym trybie SRP Batcher mieszał kolory materiałów; lokalny profil kamery usuwa ten problem. Nie wprowadzono własnego shadera jako zależności.
+
+Wygląd buduje `Networking/Editor/LobbyPresentationBuilder.cs`, a sam prefab wizualny przygotowuje `LobbyPlayerVisualSetup.cs`. Skala jest na rodzicu PlayerVisualScale poza Animatorem; oryginalne kości, wierzchołki, kontroler i ścieżki klipów są zachowane. Materiały rozdzielają strój, kapelusz/rękawiczki, twarz i buty. Serwerowy adapter PlayerNetworkAppearance powiela kolor pokoju na pozostałe klienty. Po tej zmianie prefabu wszystkie okna testowe i gracze muszą używać nowego buildu. Polecenie **Tools > Kucharze > Online > Refresh Lobby Appearance** odświeża wyłącznie generowaną oprawę sceny, kamerę i światło; zachowuje znaczniki spawnów, strefę logiczną, LobbyEntry i konfigurację sieciową. Zapisz scenę i wyjdź z Play Mode przed jego użyciem. Polecenie zastępuje również wcześniejsze nazwane bryły prototypu; własne dodatki trzymaj poza grupą `LobbyPresentation`.
+
+Scena jest już wygenerowana. Polecenie **Tools > Kucharze > Online > Create Simple Lobby** jest przeznaczone do pierwszego utworzenia zestawu i odmawia nadpisywania istniejącego folderu. **Validate Simple Lobby** sprawdza podstawowe referencje i wspólną listę scen; nie jest testem rozgrywki. **Rebuild Lobby Room Layout** dodatkowo ustawia nowy układ 2×2, przesuwa cztery spawny oraz granice pokoju gotowości; **Refresh Lobby Appearance** zachowuje ręcznie przesunięte znaczniki i strefę.
+
+Do przygotowania programu z właściwymi scenami wybierz **Tools > Kucharze > Online > Build Lobby Test** po wyjściu z Play Mode. Narzędzie sprawdza konfigurację, czeka na kompilację i buduje wariant Windows Development ze scenami Lobby i Round/Kuba, w tej kolejności. Wynik znajduje się w `%TEMP%/KucharzeLobbyTest/KucharzeLobbyTest.exe`; cały folder można skopiować poza katalog tymczasowy. Obie osoby muszą używać aktualnej wersji. Osobne polecenie **Build Windows Test** nadal buduje wcześniejszą scenę OnlineTest.
+
+`Networking/Tests/LobbySmokeProbe` jest uruchamiany wyłącznie jawnym argumentem `-kucharze-lobby-probe` w edytorze lub buildzie Development. Używa lokalnego transportu i technicznych przestawień postaci do sprawdzania reguł strefy; nie testuje klawiatury, pada ani kolizji. Test sprawdza też niezależne, replikowane kolory i bloki materiałów czterech postaci. Ta część wymaga aktywnego urządzenia graficznego: nie dodawaj `-nographics`. Wyniki rzeczywiście wykonanych sprawdzeń są zapisywane w `Documentation/Movement/Validation.md`.
+
 ## Konfiguracja przygotowana automatycznie w tym projekcie
 
 Scena testowa: `Assets/Project/Scripts/Networking/Setup/OnlineTest.unity`.

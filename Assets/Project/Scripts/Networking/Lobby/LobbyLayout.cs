@@ -24,5 +24,13 @@ namespace ModularMovement
             Vector3 half = startZone.size * 0.5f;
             return Mathf.Abs(local.x) <= half.x && Mathf.Abs(local.y) <= half.y && Mathf.Abs(local.z) <= half.z;
         }
+
+        public bool TryGetStartCenter(out Vector3 position)
+        {
+            position = default;
+            if (startZone == null) return false;
+            position = startZone.transform.TransformPoint(startZone.center);
+            return true;
+        }
     }
 }

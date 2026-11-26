@@ -249,6 +249,11 @@ namespace ModularMovement
                 : System.IO.Path.GetDirectoryName(scriptsFolder)?.Replace('\\', '/');
             RuntimeAnimatorController controller = string.IsNullOrEmpty(projectFolder) ? null
                 : UnityEditor.AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(
+                    projectFolder + "/Shared/Characters/Animations/Controllers/Player.controller");
+            if (controller != null) return controller;
+            // Keep setup available until the developer runs the folder organizer.
+            controller = string.IsNullOrEmpty(projectFolder) ? null
+                : UnityEditor.AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(
                     projectFolder + "/Animations/Controllers/Player.controller");
             if (controller != null) return controller;
             // Keep older controller locations working, both inside and outside the Player folder.

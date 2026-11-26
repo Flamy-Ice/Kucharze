@@ -49,10 +49,10 @@ public static class LobbyPresentationBuilder
         for (int x = 0; x < 12; x++)
             for (int z = 0; z < 8; z++)
                 Block("Tile", new Vector3(-10.45f + x * 1.9f, 0.04f, -6.5625f + z * 1.875f), new Vector3(1.888f, 0.025f, 1.863f), tiles[(x + z) % 2], corridor);
-        Wall("NorthWall", new Vector3(0, 0, 7.5f), 23, 1.5f, false, wall, cap, trim, art);
+        Wall("NorthWall", new Vector3(0, 0, 7.5f), 23, 4.6f, false, wall, cap, trim, art);
         Wall("SouthWall", new Vector3(0, 0, -7.5f), 23, 0.72f, false, wall, cap, trim, art);
-        Wall("WestWall", new Vector3(-11.4f, 0, 0), 15, 1.25f, true, wall, cap, trim, art);
-        Wall("EastWall", new Vector3(11.4f, 0, 0), 15, 1.25f, true, wall, cap, trim, art);
+        Wall("WestWall", new Vector3(-11.4f, 0, 0), 15, 4.6f, true, wall, cap, trim, art);
+        Wall("EastWall", new Vector3(11.4f, 0, 0), 15, 4.6f, true, wall, cap, trim, art);
         Material[] planks = { Material("PlankA", new Color(0.58f, 0.40f, 0.25f)), Material("PlankB", new Color(0.60f, 0.42f, 0.27f)), Material("PlankC", new Color(0.56f, 0.38f, 0.24f)) };
         for (int index = 0; index < 4; index++)
         {
@@ -141,6 +141,8 @@ public static class LobbyPresentationBuilder
         RenderSettings.sun = light;
         RenderSettings.ambientMode = AmbientMode.Flat;
         RenderSettings.ambientLight = new Color(0.40f, 0.43f, 0.46f);
+        LobbyUISetup.Ensure(SceneManager.GetActiveScene());
+        LobbyLevelRoomBuilder.Ensure(SceneManager.GetActiveScene());
     }
 
     private static void Sign(string text, Vector3 position, Vector2 size, Material material, Color color, Transform parent, float textSize)
@@ -236,6 +238,11 @@ public static class LobbyPresentationBuilder
         try
         {
             SceneManager.SetActiveScene(scene);
+            // Keep authored wall heights and perspective while refreshing the generated room.
+            var wallAppearance = CaptureOuterWalls(scene);
+            Camera oldCamera = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<Camera>()).FirstOrDefault();
+            float savedFieldOfView = oldCamera != null ? oldCamera.fieldOfView : 0;
+            Quaternion savedRotation = oldCamera != null ? oldCamera.transform.rotation : ViewRotation;
             var oldNames = new HashSet<string>
             {
                 ArtRoot, "Floor", "NorthWall", "SouthWall", "WestWall", "EastWall", "Room_1", "Room_2", "Room_3", "Room_4",
@@ -244,6 +251,16 @@ public static class LobbyPresentationBuilder
             foreach (GameObject root in scene.GetRootGameObjects())
                 if (oldNames.Contains(root.name)) UnityEngine.Object.DestroyImmediate(root);
             CreatePresentation();
+            RestoreOuterWalls(scene, wallAppearance);
+            if (savedFieldOfView > 0)
+            {
+                Camera newCamera = scene.GetRootGameObjects().Single(root => root.name == "LobbyCamera").GetComponent<Camera>();
+                newCamera.fieldOfView = savedFieldOfView;
+                newCamera.transform.rotation = savedRotation;
+                PrefabUtility.RecordPrefabInstancePropertyModifications(newCamera);
+                PrefabUtility.RecordPrefabInstancePropertyModifications(newCamera.transform);
+            }
+            LobbyLevelRoomBuilder.Ensure(scene);
             if (reshapeLayout)
             {
                 LobbyLayout layout = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<LobbyLayout>()).Single();
@@ -252,7 +269,7 @@ public static class LobbyPresentationBuilder
                 for (int index = 0; index < 4; index++)
                     ((Transform)spawns.GetArrayElementAtIndex(index).objectReferenceValue).position = RoomSpawn(index);
                 var zone = (BoxCollider)settings.FindProperty("startZone").objectReferenceValue;
-                zone.transform.position = new Vector3(0, 1.5f, 4.85f);
+                zone.transform.position = LobbyLevelRoomBuilder.ReadyCenter;
                 zone.size = new Vector3(6.4f, 5, 4.6f);
             }
             LobbyPlayerVisualSetup.Apply();
@@ -263,6 +280,33 @@ public static class LobbyPresentationBuilder
         {
             if (previous.IsValid() && previous.isLoaded) SceneManager.SetActiveScene(previous);
             if (opened) EditorSceneManager.CloseScene(scene, true);
+        }
+    }
+
+    private static Dictionary<string, (Vector3 position, Quaternion rotation, Vector3 scale)> CaptureOuterWalls(Scene scene)
+    {
+        var result = new Dictionary<string, (Vector3, Quaternion, Vector3)>();
+        Transform scenery = scene.GetRootGameObjects().FirstOrDefault(root => root.name == ArtRoot)?.transform;
+        if (scenery == null) return result;
+        foreach (string side in new[] { "NorthWall", "EastWall", "WestWall" })
+            foreach (string suffix in new[] { "", "Cap", "Skirting" })
+            {
+                Transform wall = scenery.Find(side + suffix);
+                if (wall != null) result[wall.name] = (wall.localPosition, wall.localRotation, wall.localScale);
+            }
+        return result;
+    }
+
+    private static void RestoreOuterWalls(Scene scene, Dictionary<string, (Vector3 position, Quaternion rotation, Vector3 scale)> appearance)
+    {
+        Transform scenery = scene.GetRootGameObjects().Single(root => root.name == ArtRoot).transform;
+        foreach (var entry in appearance)
+        {
+            Transform wall = scenery.Find(entry.Key);
+            if (wall == null) continue;
+            wall.localPosition = entry.Value.position;
+            wall.localRotation = entry.Value.rotation;
+            wall.localScale = entry.Value.scale;
         }
     }
 
@@ -330,7 +374,7 @@ public static class LobbyPresentationBuilder
                         throw new InvalidOperationException("Room spawn is blocked by " + collider.name);
             }
         }
-        if (!layout.Contains(new Vector3(0, 1.1f, 5.5f)) || layout.Contains(new Vector3(0, 1.1f, 0)))
+        if (!layout.TryGetStartCenter(out Vector3 startCenter) || !layout.Contains(startCenter) || layout.Contains(new Vector3(0, 1.1f, 0)))
             throw new InvalidOperationException("The start room bounds changed.");
         foreach (Transform item in scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<Transform>(true)))
             if (GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(item.gameObject) != 0)

@@ -54,11 +54,11 @@ public static class MainMenuSceneSetup
         if (File.Exists(ScenePath)) throw new InvalidOperationException("The main menu already exists. Edit its Canvas objects directly.");
         if (string.IsNullOrEmpty(SceneManager.GetActiveScene().path))
             throw new InvalidOperationException("Save the current untitled scene before creating the main menu.");
-        font = AssetDatabase.LoadAssetAtPath<Font>("Assets/Project/UI/Fonts/Sources/Jua-Regular.ttf");
+        font = AssetDatabase.LoadAssetAtPath<Font>(ProjectAssetPaths.FontSources + "/Jua-Regular.ttf");
         if (font == null) throw new InvalidOperationException("The Jua font is missing.");
         foreach (string name in new[] { "MainMenu_Background.png", "Let it Flush!.png", "Main_Menu_Button_Play.png",
             "MainMenu_Button_Options.png", "MainMenu_Button_Credits.png", "MainMenu_Button_Quit.png" }) PrepareSprite(name);
-        GameObject connection = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Prefabs/Networking/LobbyConnection.prefab");
+        GameObject connection = AssetDatabase.LoadAssetAtPath<GameObject>(ProjectAssetPaths.NetworkPrefabs + "/LobbyConnection.prefab");
         AudioMixer mixer = AssetDatabase.LoadAssetAtPath<AudioMixer>("Assets/Project/Scripts/Player/Audio/Mixers/GameAudio.mixer");
         if (connection == null || mixer == null) throw new InvalidOperationException("The lobby connection and GameAudio mixer are required.");
         AudioMixerGroup musicGroup = mixer.FindMatchingGroups("Music").Single();

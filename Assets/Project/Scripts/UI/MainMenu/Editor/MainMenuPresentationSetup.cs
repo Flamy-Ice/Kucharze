@@ -11,7 +11,7 @@ using UnityEngine.UI;
 // Restyles the existing menu while keeping its buttons, audio assignments and network references.
 public static class MainMenuPresentationSetup
 {
-    private const string GroupPath = "Assets/Project/UI/MainMenu/Artwork/MainMenu_Group.png";
+    private const string GroupPath = ProjectAssetPaths.MenuArtwork + "/MainMenu_Group.png";
     private static readonly Color Ink = new Color32(37, 33, 56, 255);
     private static readonly Color Purple = new Color32(75, 71, 86, 255);
     private static readonly Color Paper = new Color32(255, 254, 221, 255);
@@ -42,8 +42,8 @@ public static class MainMenuPresentationSetup
 
     public static void ApplyToScene(Scene scene)
     {
-        Font heading = AssetDatabase.LoadAssetAtPath<Font>("Assets/Project/UI/Fonts/Sources/Jua-Regular.ttf");
-        Font body = AssetDatabase.LoadAssetAtPath<Font>("Assets/Project/UI/Fonts/Sources/MadimiOne-Regular.ttf");
+        Font heading = AssetDatabase.LoadAssetAtPath<Font>(ProjectAssetPaths.FontSources + "/Jua-Regular.ttf");
+        Font body = AssetDatabase.LoadAssetAtPath<Font>(ProjectAssetPaths.FontSources + "/MadimiOne-Regular.ttf");
         var importer = (TextureImporter)AssetImporter.GetAtPath(GroupPath);
         if (importer != null && (importer.mipmapEnabled || importer.textureCompression != TextureImporterCompression.Uncompressed))
         {

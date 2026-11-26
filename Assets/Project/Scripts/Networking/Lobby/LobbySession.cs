@@ -8,11 +8,12 @@ using UnityEngine.SceneManagement;
 namespace ModularMovement
 {
     // Checks everyone on the server and changes scenes together when the group is ready.
-    [RequireComponent(typeof(NetworkObject))]
+    [RequireComponent(typeof(NetworkObject), typeof(LobbyLevelSelection))]
     public sealed class LobbySession : NetworkBehaviour
     {
         [SerializeField] private string lobbyScene;
-        [SerializeField] private string gameScene;
+        [SerializeField, Tooltip("Legacy destination used to seed Level 1 during editor setup. Players still need to select it.")]
+        private string gameScene;
         [SerializeField, Min(0.1f), Tooltip("Time everyone must stay inside the start zone, in seconds.")]
         private float readySeconds = 5f;
         private readonly NetworkVariable<int> total = new NetworkVariable<int>();
@@ -23,8 +24,11 @@ namespace ModularMovement
         private readonly NetworkVariable<FixedString128Bytes> error = new NetworkVariable<FixedString128Bytes>();
         private readonly NetworkVariable<FixedString64Bytes> joinCode = new NetworkVariable<FixedString64Bytes>();
         private readonly LobbyRoomAssignments rooms = new LobbyRoomAssignments();
+        private readonly LobbyHostLevelSelector hostLevelSelector = new LobbyHostLevelSelector();
         private readonly List<PlayerMovementResolver> pausedMovement = new List<PlayerMovementResolver>();
         private LobbyLayout layout;
+        private LobbyLevelZones levelZones;
+        private LobbyLevelSelection levelSelection;
         private string pendingScene;
         private bool sceneFinished;
 
@@ -36,11 +40,15 @@ namespace ModularMovement
         public string Error => error.Value.ToString();
         public string JoinCode => joinCode.Value.ToString();
         public string LobbyScenePath => lobbyScene;
+        public string DefaultGameScenePath => gameScene;
+        public LobbyLevelSelection LevelSelection => levelSelection;
+        public bool HasSelectedLevel => levelSelection != null && levelSelection.HasSelection;
         public int SecondsRemaining => deadline.Value <= 0 ? 0 : Mathf.Max(0,
             Mathf.CeilToInt((float)(deadline.Value - NetworkManager.ServerTime.Time)));
 
         public override void OnNetworkSpawn()
         {
+            levelSelection = GetComponent<LobbyLevelSelection>();
             if (!IsServer) return;
             NetworkManager.OnClientConnectedCallback += OnRosterChanged;
             NetworkManager.OnClientDisconnectCallback += OnRosterChanged;
@@ -57,11 +65,12 @@ namespace ModularMovement
         private void FindLayout()
         {
             layout = null;
+            levelZones = null;
             Scene scene = SceneManager.GetActiveScene();
             foreach (GameObject root in scene.GetRootGameObjects())
             {
-                layout = root.GetComponentInChildren<LobbyLayout>();
-                if (layout != null) break;
+                if (layout == null) layout = root.GetComponentInChildren<LobbyLayout>();
+                if (levelZones == null) levelZones = root.GetComponentInChildren<LobbyLevelZones>();
             }
         }
 
@@ -96,12 +105,17 @@ namespace ModularMovement
                 if (total.Value < 2) ReturnToLobby();
                 return;
             }
+            if (hostLevelSelector.TrySelect(NetworkManager, levelSelection, levelZones, Time.unscaledDeltaTime))
+            {
+                deadline.Value = 0;
+                error.Value = default;
+            }
             int inside = 0;
             foreach (NetworkClient client in NetworkManager.ConnectedClientsList)
                 if (client.PlayerObject != null && client.PlayerObject.IsSpawned && layout != null
                     && layout.Contains(client.PlayerObject.transform.position)) inside++;
             ready.Value = inside;
-            if (total.Value < 2 || total.Value > 4 || inside != total.Value)
+            if (total.Value < 2 || total.Value > 4 || inside != total.Value || !HasSelectedLevel)
             {
                 deadline.Value = 0;
                 error.Value = default;
@@ -109,7 +123,7 @@ namespace ModularMovement
             }
             if (error.Value.Length > 0) return;
             if (deadline.Value <= 0) deadline.Value = NetworkManager.ServerTime.Time + readySeconds;
-            if (NetworkManager.ServerTime.Time >= deadline.Value) BeginSceneChange(gameScene);
+            if (NetworkManager.ServerTime.Time >= deadline.Value) BeginSceneChange(levelSelection.SelectedScenePath);
         }
 
         private void BeginSceneChange(string scene)

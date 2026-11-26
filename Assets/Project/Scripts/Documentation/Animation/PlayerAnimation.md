@@ -5,7 +5,7 @@ Replika wybiera animację z PlayerStates i odczytuje ReplicaDashProgress zamiast
 Prędkość odtwarzania Run wynika z rzeczywistej prędkości. Wszyscy uczestnicy muszą używać tej samej konfiguracji prefabu i kontrolera animacji.
 Nie należy dodawać drugiego NetworkAnimator sterującego tymi samymi parametrami.
 
-Domyślny kontroler znajduje się w `Assets/Project/Animations/Controllers/Player.controller`. Automatyczne przypisanie w edytorze korzysta z tej lokalizacji względem folderu projektu; jawnie przypisane kontrolery pozostają zachowane.
+Domyślny kontroler znajduje się w `Assets/Project/Shared/Characters/Animations/Controllers/Player.controller`. Automatyczne przypisanie w edytorze korzysta z tej lokalizacji względem folderu projektu; jawnie przypisane kontrolery pozostają zachowane.
 
 ## Wizualny wariant gracza lobby
 

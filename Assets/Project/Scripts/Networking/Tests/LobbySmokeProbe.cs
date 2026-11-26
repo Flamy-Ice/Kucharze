@@ -67,6 +67,9 @@ namespace ModularMovement
                     {
                         Check(appearances.Select(player => player.PaletteIndex).Distinct().Count() == 4, "Player colors did not replicate independently.");
                         Check(CountCoatColors(appearances) == 4, "Player materials shared a tint on the client.");
+                        LobbySession replicated = FindAnyObjectByType<LobbySession>();
+                        Check(replicated != null && replicated.LevelSelection != null && replicated.LevelSelection.SelectedIndex == 0,
+                            "The host's level selection did not replicate to a late-joining client.");
                         colorsChecked = true;
                     }
                     yield return null;
@@ -89,6 +92,34 @@ namespace ModularMovement
             yield return null;
             Vector3[] positions = manager.ConnectedClientsList.Select(c => c.PlayerObject.transform.position).ToArray();
             Check(Vector3.Distance(positions[0], positions[1]) > 3, "Players shared a spawn.");
+            LobbyLevelSelection selection = session.LevelSelection;
+            LobbyLevelZones levelZones = FindAnyObjectByType<LobbyLevelZones>();
+            Check(selection != null && levelZones != null, "Level selection setup is missing.");
+            Check(selection.SelectedIndex == -1, "A level was selected without the host choosing it.");
+            MoveEveryoneInside();
+            until = Time.realtimeSinceStartup + 5.5f;
+            while (Time.realtimeSinceStartup < until) yield return null;
+            Check(session.IsLobby && session.SecondsRemaining == 0, "The game started without a selected level.");
+            NetworkClient guest = manager.ConnectedClientsList.First(client => client.ClientId != 0);
+            Check(!selection.TrySelectLevel(0, guest.ClientId), "A guest changed the selected level.");
+            Check(!selection.TrySelectLevel(99, 0), "An invalid level index was accepted.");
+            for (int index = 0; index < LobbyLevelSelection.LevelCount; index++)
+                if (!selection.IsLevelAvailable(index))
+                    Check(!selection.TrySelectLevel(index, 0), "An unavailable level was selected.");
+            Check(levelZones.TryGetCenter(0, out Vector3 choicePosition), "The first level pad is missing.");
+            Place(guest.PlayerObject, choicePosition);
+            yield return null;
+            yield return null;
+            Check(selection.SelectedIndex == -1, "A guest selected a level by entering its pad.");
+            Place(manager.ConnectedClients[0].PlayerObject, choicePosition);
+            float enteredPadAt = Time.realtimeSinceStartup;
+            yield return null;
+            yield return null;
+            if (Time.realtimeSinceStartup - enteredPadAt < selection.SelectionHoldSeconds)
+                Check(selection.SelectedIndex == -1, "A brief step on the pad selected a level.");
+            until = enteredPadAt + selection.SelectionHoldSeconds + 0.15f;
+            while (Time.realtimeSinceStartup < until) yield return null;
+            Check(selection.SelectedIndex == 0, "The host's pad did not select Level 1.");
             MoveEveryoneInside();
             until = Time.realtimeSinceStartup + 1;
             while (Time.realtimeSinceStartup < until) yield return null;
@@ -141,9 +172,12 @@ namespace ModularMovement
 
         private void MoveEveryoneInside()
         {
+            LobbyLayout layout = FindAnyObjectByType<LobbyLayout>();
+            Check(layout != null && layout.TryGetStartCenter(out _), "The ready area is missing.");
+            layout.TryGetStartCenter(out Vector3 center);
             int index = 0;
             foreach (NetworkClient client in manager.ConnectedClientsList)
-                Place(client.PlayerObject, new Vector3(-2.25f + index++ * 1.5f, 1.1f, 5.5f));
+                Place(client.PlayerObject, new Vector3(center.x - 2.25f + index++ * 1.5f, 1.1f, center.z));
         }
 
         private static int CountCoatColors(System.Collections.Generic.IEnumerable<PlayerNetworkAppearance> players)

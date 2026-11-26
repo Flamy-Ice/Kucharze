@@ -1,94 +1,99 @@
 # Układ folderów projektu
 
-Główny poziom `Assets` ma trzy foldery:
+Uzgodniony układ docelowy oddziela zasoby scen, wspólne pliki i zastępcze elementy wizualne. Model Player.fbx i klipy rig_*.anim są własnymi zasobami zespołu. TextMesh Pro jest oficjalnym pakietem Unity; jego zasoby, shadery i licencje trafiają do Unity, bez zmiany podfolderów Resources.
 
 ```text
 Assets/
-  Project/                     # Nasza gra, jej sceny, grafiki, skrypty i ustawienia
-    Settings/BuildProfiles/    # Nasze profile budowania Windows i Android
-    Prefabs/Networking/        # Także DefaultNetworkPrefabs.asset
-  ThirdParty/                  # Zewnętrzne dodatki spoza Unity i zespołu
-  Unity/                       # Oficjalne zasoby i konfiguracja pakietów Unity
-    Settings/                  # Ustawienia i profile renderowania URP
-    TextMesh Pro/              # Zasoby TMP, domyślna czcionka, shadery i licencje
-    XR/                        # Ustawienia XR, OpenXR i symulacji
-      CompositionLayers/      # Ustawienia pakietu Composition Layers
+  Project/
+    MainMenu/UI/
+      Artwork/                 # Tło, logo i grafika panelu
+      Buttons/                 # Grafiki przycisków
+    Lobby/Prefabs/
+      Networking/              # Połączenie, sesja i lista prefabów lobby
+      Characters/              # LobbyPlayer
+      Cameras/                 # LobbyCamera
+    Gameplay/
+      Prefabs/
+        Characters/            # Player
+        Cameras/               # Kamera rozgrywki
+      UI/HUD/
+        Controls/              # Grafiki sterowania ekranowego
+        Panels/                # Tła paneli graczy, monet i czasu
+        Icons/                 # Ikony HUD
+    Shared/
+      Characters/
+        Models/                # Nasz Player.fbx
+        Animations/
+          Clips/               # Nasze animacje rig_*
+          Controllers/         # Player.controller
+      UI/Fonts/
+        Sources/               # Pliki TTF używane przez grę
+        TextMeshPro/           # Font Assets utworzone dla gry
+      Networking/              # DefaultNetworkPrefabs.asset
+    Placeholders/Lobby/
+      Materials/
+        Architecture/          # Zabudowa i podłogi
+        Furnishings/           # Wyposażenie
+        RoomColors/            # Kolory graczy, pokoi i gotowości
+      Characters/
+        Materials/             # Zastępcze materiały postaci lobby
+        Meshes/                # Wygenerowana siatka i pierścień
+    Development/Networking/    # Wcześniejsza konfiguracja testowa
+    Settings/BuildProfiles/    # Profile budowania projektu
+    Scenes/Debug/
+      Kuba/
+        Main Menu.unity        # Pierwsza scena buildu
+        Lobby.unity
+        Kuba.unity
+        Prototypes/            # Wcześniejsze sceny poza zwykłym buildem
+      Ada/                     # Zachowane foldery zespołu
+      Mati/
+      Szymon/
+    Scripts/
+      AGENTS.md
+      Player/                  # Istniejący podział modułów bez zmian
+      Networking/              # Connection, Lobby, Editor i Tests
+      UI/                      # MainMenu, Controls i HUD
+      Economy/
+      Editor/ProjectStructure/ # Wspólne ścieżki, organizator i walidator
+      Documentation/
+  ThirdParty/                  # Dodatki od zewnętrznych autorów
+  Unity/
+    Settings/                  # Oficjalne ustawienia renderowania
+    TextMesh Pro/              # Zasoby oficjalnego pakietu TMP
 ```
 
-TextMesh Pro jest oficjalnym pakietem Unity, dlatego jego importowane zasoby należą do `Unity`, a nasze czcionki do `Project/UI/Fonts`. `DefaultNetworkPrefabs.asset` zawiera listę naszych prefabów, dlatego pozostaje w `Project`. Netcode ma zapisaną nową ścieżkę tej listy w swoich ustawieniach projektu. Nie trzeba ponownie generować prefabów ani konfiguracji XR po zmianie folderów.
+Zasób używany przez kilka scen należy do Shared. Prefab połączenia używany z menu pozostaje w grupie Lobby, ponieważ należy do przepływu sesji lobby. Zastępcza postać i materiały lobby są w Placeholders, ale działające prefaby pozostają przy scenie. Wasz model oraz animacje nie są oznaczane jako placeholder bez takiej decyzji zespołu.
 
-Poniższa szczegółowa mapa dotyczy `Assets/Project/`:
+Nie tworzymy pustych folderów Placeholders/MainMenu, Gameplay ani Shared, dopóki nie mają zasobów. ThirdParty pozostaje przygotowany jako jeden z trzech głównych katalogów. Istniejące puste foldery innych systemów nie oznaczają nowych funkcji. Sceny i modularne skrypty zachowują dotychczasowy podział; przenosiny nie zmieniają rozgrywki.
 
-```text
-Scenes/Debug/Kuba/
-  Main Menu.unity              # Pierwsza scena gry
-  Lobby.unity                  # Lobby hosta i klientów
-  Kuba.unity                   # Obecna rozgrywka online
-  Prototypes/                  # Wcześniejsze sceny do pracy i testów
+## Zastosowanie układu w Unity
 
-Prefabs/
-  Networking/                  # Połączenie, sesja, lista prefabów lobby
-  Characters/                  # Postać lobby
-  Cameras/                     # Prefaby kamer
+Stan na 2026-11-26: użytkownik wykonał organizację w Unity. Wynik: 17 przenosin, 135 kontroli GUID-ów i zawartości zakończonych powodzeniem; lista scen buildu zachowana. Sprawdzono też docelowe lokalizacje na dysku, trzy główne foldery oraz zapisaną ścieżkę listy Netcode. Poniższe kroki opisują użycie narzędzia; nie trzeba ponownie uruchamiać migracji. Nie ma automatycznego polecenia wykonywanego przy starcie edytora.
 
-Placeholders/
-  Lobby/Materials/
-    Architecture/              # Ściany, podłogi i pozostała zabudowa
-    Furnishings/               # Wyposażenie i jego materiały
-    RoomColors/                # Kolory pokoi i oznaczenia gotowości
-  Characters/
-    Materials/                 # Materiały zastępczej postaci
-    Meshes/                    # Siatki postaci i znacznika
+1. Wyjdź z Play Mode, jeśli przycisk Play na górze jest aktywny. Zapisz otwarte sceny przez **File > Save**, a otwarty prefab przyciskiem **Save** w jego widoku. Niezapisana pusta scena Untitled może zostać zamknięta przez otwarcie zapisanej sceny, ale najpierw zachowaj własne zmiany.
+2. Wybierz **Assets > Refresh**. Poczekaj, aż Unity skończy import i kompilację; ikona postępu w dolnym prawym rogu przestanie pracować.
+3. Wybierz **Tools > Kucharze > Project > Organize Scene Assets**. Polecenie przenosi zasoby przez AssetDatabase razem z ich metadanymi. Nie nadpisuje istniejących celów. Zmienia też zapisaną ścieżkę listy prefabów Netcode, aby pakiet nie odtwarzał jej w głównym Assets.
+4. Otwórz **Window > General > Console**. Oczekiwany wynik: `Scene asset organization complete: ... GUID/content checks passed; build scene entries preserved.` Jeżeli pojawi się błąd, przekaż jego treść; nie przenoś ręcznie kolidujących plików.
+5. Wybierz **Tools > Kucharze > Project > Validate Folder Layout**. Oczekiwany wynik: `Project folder layout and playable scene entries are valid.`
+6. Otwórz **File > Build Profiles > Open Scene List**. Włączone sceny pozostają w kolejności Main Menu, Lobby, Kuba. Prototypes pozostaje poza normalnym buildem. Wyłączony wpis nieistniejącej SampleScene został usunięty podczas sprzątania.
 
-Development/Networking/        # Starszy prefab online, lista i wynik konfiguracji
+Walidacja układu sprawdza ścieżki i podstawowe referencje. Nie zastępuje Play Mode, testu Relay ani buildu Windows/Android. Uruchomienie organizatora ponownie pomija już przeniesione źródła; jeśli istnieje jednocześnie stara i nowa lokalizacja, zatrzymuje się bez nadpisywania.
 
-UI/
-  MainMenu/
-    Artwork/                   # Tło, logo i MainMenu_Group
-    Buttons/                   # Gotowe grafiki przycisków
-  HUD/
-    Controls/                  # Grafiki sterowania
-    Panels/                    # Tła paneli
-    Icons/                     # Ikony
+Nowe zasoby przypisuj najpierw do sceny lub Shared, a następnie do typu pliku. Tymczasowe grafiki umieszczaj w analogicznej grupie w Placeholders. Zachowuj pliki .meta oraz Resources-relative paths oficjalnych pakietów. Nie edytuj PackageCache. Generatory korzystają z ProjectAssetPaths.cs; przy zmianie ścieżek aktualizuj również dokumentację i tekstowe odwołania. Computer Use nie jest używane; czynności w edytorze wykonuje użytkownik według instrukcji.
 
-UI/Fonts/
-  Sources/                     # Oryginalne pliki czcionek
-  TextMeshPro/                 # Font Assets używane przez teksty TMP
-Animations/Controllers/        # Kontrolery Animatora
+## Android na zwykły telefon — bez XR
 
-Scripts/
-  Player/                      # Moduły gracza; dotychczasowy podział zachowany
-  Networking/
-    Connection/                # Relay i połączenie z menu
-    Lobby/                     # Zasady lobby, gotowość i przypisywanie pokoi
-    Tests/                     # Narzędzia do sprawdzania sieci
-    Editor/Lobby/              # Generowanie i wygląd lobby
-    Editor/Online/             # Konfiguracja usług i wcześniejszego testu
-  UI/
-    MainMenu/
-      Audio/                   # Muzyka, głośność i dźwięki przycisków
-      Display/                 # Ustawienia obrazu i rozpoznawanie platformy
-      Interaction/             # Animacje i obsługa kontrolek
-      Views/                   # Nawigacja, Credits i wygląd paneli
-      Editor/                  # Przygotowanie sceny menu
-    Controls/                  # Sterowanie ekranowe
-    HUD/                       # Licznik czasu i wyświetlanie monet
-      Editor/                  # Inspektory tych elementów
-  Editor/ProjectStructure/     # Wspólne ścieżki i kontrola układu
-  Documentation/               # Instrukcje i wykonane sprawdzenia
-```
+Cel mobilny to zwykłe telefony Android, bez AR, VR i Android XR. Użytkownik usunął Unity OpenXR Android XR przez Package Manager. Kontrola manifest.json i packages-lock.json potwierdziła brak pakietów com.unity.xr.*, w tym OpenXR, AR Foundation, XR Hands, XR Plug-in Management oraz Composition Layers.
 
-`Placeholders` zawiera aktualnie używane, zastępcze elementy wizualne. Nie są to pliki przeznaczone do usunięcia: lobby i postać nadal ich potrzebują. Docelowe grafiki dostarczone do menu pozostają w `UI/MainMenu`. `Development` i `Prototypes` oddzielają wcześniejsze narzędzia oraz sceny od obecnego wejścia do gry.
+Usunięto pozostawione ustawienia Assets/XR i Assets/Unity/XR, ich metadane oraz trzy osierocone wpisy XR w EditorBuildSettings. Walidator nie wymaga zasobów XR, a organizator nie przenosi dawnych folderów XR. Profil Project/Settings/BuildProfiles/Android.asset zachował swój GUID i ustawienia zwykłej platformy Android; zmieniła się nazwa pliku i etykieta Android XR na Android.
 
-Sceny innych członków zespołu zachowują swoje foldery w `Project`. Zasoby zewnętrzne grupujemy według dostawcy w `ThirdParty`, a oficjalne zasoby Unity w `Unity`. Pliki `.meta` przechodzą razem z assetami, aby Unity zachowało referencje. Zmiana folderów nie scala prefabów ani nie zmienia reguł rozgrywki.
+Android Build Support oraz Device Simulator pozostają dostępne. Wbudowany moduł silnika com.unity.modules.xr i standardowe pola XR w ustawieniach Unity nie są pakietem OpenXR ani włączeniem AR/VR. Nie edytowano PackageCache ani wspólnych ustawień silnika tylko z powodu występowania w nich liter XR.
 
-## Jak znaleźć scenę i sprawdzić listę
+Po zakończeniu zmian:
+1. Zapisz swoją pracę i zamknij edytor Unity.
+2. W Unity Hub ponownie otwórz projekt Kucharze. Ponowne otwarcie pozwoli odczytać oczyszczone ustawienia projektu i zaktualizować zaimportowane zasoby.
+3. Poczekaj na koniec kompilacji. Wybierz Tools > Kucharze > Project > Validate Folder Layout. Oczekiwany komunikat w Window > General > Console: `Project folder layout and playable scene entries are valid.`
+4. Otwórz File > Build Profiles. Profil Android jest profilem telefonu; Main Menu, Lobby i Kuba pozostają na liście scen w dotychczasowej kolejności.
 
-1. W oknie **Project** otwórz **Assets > Project > Scenes > Debug > Kuba**.
-2. Kliknij dwukrotnie **Main Menu**, aby otworzyć wejście do gry.
-3. Otwórz **File > Build Profiles > Open Scene List**. Pierwszą włączoną sceną powinno być **Main Menu**, a kolejnymi **Lobby** i **Kuba**. Folder **Prototypes** nie należy do zwykłego buildu gry.
-4. Wybierz **Tools > Kucharze > Project > Validate Folder Layout**. Poprawny wynik pojawia się w **Console** jako `Project folder layout and playable scene entries are valid.` Narzędzie sprawdza także trzy foldery główne i ścieżkę listy Netcode. To sprawdzenie ścieżek i podstawowych referencji, nie test multiplayera.
-
-Przy dodawaniu kolejnych paczek kieruj ich zasoby do odpowiedniego folderu, jeśli importer pozwala wybrać lokalizację. Importer może utworzyć nowy folder bezpośrednio w `Assets`; wtedy sprawdź zależności przed jego przeniesieniem. Wymagane przez pakiety podfoldery `Resources` zachowują nazwy i względne ścieżki.
-
-Generatory korzystają ze wspólnych ścieżek w `Scripts/Editor/ProjectStructure/ProjectAssetPaths.cs`. Przy kolejnych przenosinach aktualizuj je razem z zapisanymi ścieżkami scen w komponentach i listą scen buildu. Same referencje do assetów Unity zwykle zachowuje dzięki plikom `.meta`; pola tekstowe ze ścieżkami wymagają osobnej aktualizacji.
+Kompilacja zmienionych narzędzi edytora przeszła kompilatorem Roslyn z Unity 6000.6.3f1. Kontrole plików potwierdziły trzy główne foldery, brak pakietów i konfiguracji XR oraz zachowanie zwykłych ustawień Androida. Nie wykonano w tej zmianie ponownego uruchomienia Unity, walidacji w jego API, Play Mode ani buildu APK. Jeżeli XR wróci, trzeba sprawdzić, czy ponownie zainstalowano pakiet tworzący ten folder; nie należy maskować go automatycznym przenoszeniem.

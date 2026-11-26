@@ -79,6 +79,7 @@ public static class LobbySceneSetup
             var session = rules.AddComponent<LobbySession>();
             SetString(session, "lobbyScene", LobbyPath);
             SetString(session, "gameScene", RoundPath);
+            LobbyLevelRoomBuilder.ConfigureInitialLevels(session);
             GameObject sessionPrefab = PrefabUtility.SaveAsPrefabAsset(rules, Root + "/LobbySession.prefab");
             UnityEngine.Object.DestroyImmediate(rules);
 
@@ -149,7 +150,7 @@ public static class LobbySceneSetup
         LobbyPlayerVisualSetup.Apply();
         var positions = Enumerable.Range(0, 4).Select(LobbyPresentationBuilder.RoomSpawn).ToArray();
         var zone = new GameObject("StartZone_MoveAndResizeMe");
-        zone.transform.position = new Vector3(0, 1.5f, 4.85f);
+        zone.transform.position = LobbyLevelRoomBuilder.ReadyCenter;
         var box = zone.AddComponent<BoxCollider>();
         box.isTrigger = true;
         box.size = new Vector3(6.4f, 5, 4.6f);

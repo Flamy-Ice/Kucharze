@@ -2,7 +2,7 @@
 
 Scena: `Assets/Project/Scenes/Debug/Kuba/Main Menu.unity`.
 
-Menu korzysta z drewnianego tła, logo i przycisków z `Assets/Project/UI/MainMenu/`, a na wszystkich czterech ekranach z jasnej grafiki `MainMenu_Group.png`, zgodnie z dodatkową referencją użytkownika. Home ma panel 760 × 758, a Play, Options i Credits szerszy panel 1000 × 758. Teksty pozostają po angielsku. Grafiki są osobnymi elementami UI, nie jednym nieaktywnym obrazem. Jua służy do tytułów i nazwisk, a Madimi One do opisów, ról i komunikatów. Ciemne teksty zachowują kontrast z jasnymi panelami. Canvas skaluje się względem 1920 × 1085; EventSystem korzysta z Input System. Drewniane tło wypełnia całe okno, także przy szerszych proporcjach ekranów telefonów.
+Menu korzysta z drewnianego tła, logo i przycisków z `Assets/Project/MainMenu/UI/`, a na wszystkich czterech ekranach z jasnej grafiki `MainMenu_Group.png`, zgodnie z dodatkową referencją użytkownika. Home ma panel 760 × 758, a Play, Options i Credits szerszy panel 1000 × 758. Teksty pozostają po angielsku. Grafiki są osobnymi elementami UI, nie jednym nieaktywnym obrazem. Jua służy do tytułów i nazwisk, a Madimi One do opisów, ról i komunikatów. Ciemne teksty zachowują kontrast z jasnymi panelami. Canvas skaluje się względem 1920 × 1085; EventSystem korzysta z Input System. Drewniane tło wypełnia całe okno, także przy szerszych proporcjach ekranów telefonów.
 
 ## Ekrany i odpowiedzialności
 

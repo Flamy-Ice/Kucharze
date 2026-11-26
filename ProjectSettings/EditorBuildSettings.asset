@@ -8,9 +8,6 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Project/Scenes/Debug/Kuba/Main Menu.unity
     guid: 2b646a0bb59d6db43b269b8383fcf84b
-  - enabled: 0
-    path: Assets/Scenes/SampleScene.unity
-    guid: 99c9720ab356a0642a771bea13969a05
   - enabled: 1
     path: Assets/Project/Scenes/Debug/Kuba/Lobby.unity
     guid: 67e50559c8cc9974daa97eae87a541d1
@@ -19,6 +16,3 @@ EditorBuildSettings:
     guid: be84c6ad8c0baf54eb4c7ebc0891e515
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
-    com.unity.xr.arfoundation.simulation_settings: {fileID: 11400000, guid: 584070d3010afdf409e77d2e89da94bd, type: 2}
-    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: a3d20925ee7a5f34ba459173bbbb63da, type: 2}
-    com.unity.xr.openxr.settings4: {fileID: 11400000, guid: 184f4923b5d103f4597358f396f2c727, type: 2}

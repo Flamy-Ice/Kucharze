@@ -40,6 +40,29 @@ public static class ProjectStructureValidation
         foreach (string pattern in new[] { "*.unity", "*.prefab", "*.mat", "*.fbx", "*.png", "*.ttf", "*.controller", "*.anim" })
             if (Directory.EnumerateFiles("Assets/Project/Scripts", pattern, SearchOption.AllDirectories).Any())
                 throw new InvalidOperationException("Game content must be outside Scripts: " + pattern);
+        foreach (string path in new[]
+        {
+            ProjectAssetPaths.DefaultNetworkPrefabs, ProjectAssetPaths.LobbyPlayer, ProjectAssetPaths.LobbyCamera,
+            ProjectAssetPaths.NetworkPrefabs + "/LobbyConnection.prefab",
+            ProjectAssetPaths.NetworkPrefabs + "/LobbySession.prefab",
+            ProjectAssetPaths.MenuArtwork + "/MainMenu_Group.png",
+            ProjectAssetPaths.FontSources + "/Jua-Regular.ttf",
+            "Assets/Project/Shared/Characters/Models/Player.fbx",
+            "Assets/Project/Shared/Characters/Animations/Controllers/Player.controller",
+            "Assets/Project/Gameplay/Prefabs/Characters/Player.prefab",
+            "Assets/Project/Gameplay/Prefabs/Cameras/Camera.prefab"
+        })
+            if (AssetDatabase.LoadMainAssetAtPath(path) == null)
+                throw new InvalidOperationException("Missing organized asset: " + path);
+        foreach (var resource in new[]
+        {
+            new[] { "TMP Settings", ProjectAssetPaths.UnityTextMeshPro + "/Resources/TMP Settings.asset" }
+        })
+        {
+            var expected = AssetDatabase.LoadMainAssetAtPath(resource[1]);
+            if (expected == null || UnityEngine.Resources.Load(resource[0]) != expected)
+                throw new InvalidOperationException("Package resource path changed: " + resource[0]);
+        }
 #if KUCHARZE_ONLINE
         MainMenuSceneSetup.Validate();
         LobbySceneSetup.Validate();

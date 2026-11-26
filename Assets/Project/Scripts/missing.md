@@ -1,24 +1,28 @@
-HUD
-    Coin
-        Functionality
-    Timer
-        Functionality
-    PlayerList
-        Script
-        Functionality
-    Menu button
-        Functionality
-    Action Buttons
-        Functionality
-        
-Main Menu
+Uporządkuj projekt
 
-Kamera niech porusza się za graczami
+Main Menu
+    Sprawdź jak działa na mobilce
+    Mati
+        Hoover
+        Click
+        Music
+    Ada
+        Buttons
+            Host Game
+            Join Game
+            Cancel
+
+
+
+
+
+
 
 Mati
     PlayerAudio
         Kroki
         Dash
+    FieldOfView na kamerze
 
 Szymon
     PlayerVFX

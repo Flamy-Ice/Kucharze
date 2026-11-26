@@ -18,10 +18,10 @@ Powyżej opisano ustalone wymagania. Zakres przygotowanego prototypu jest opisan
 
 ## Prosta scena lobby
 
-Generator `Networking/Editor/LobbySceneSetup.cs` tworzy osobny zestaw w `Networking/Lobby/Generated/`, bez nadpisywania oryginalnej sceny Kuba i istniejącego testu online:
+Generator `Networking/Editor/Lobby/LobbySceneSetup.cs` korzysta ze wspólnych ścieżek w `Editor/ProjectStructure/ProjectAssetPaths.cs`. Grywalne sceny są w `Assets/Project/Scenes/Debug/Kuba/`, prefaby w `Assets/Project/Prefabs/`, a zastępcza oprawa w `Assets/Project/Placeholders/`. Wcześniejsze sceny pozostają osobno w `Scenes/Debug/Kuba/Prototypes/`; pełny podział opisuje [mapa folderów](../ProjectStructure.md).
 
-- `Lobby.unity`: cztery umeblowane pokoje wokół wspólnego korytarza i salonu, zielony pokój gotowości, oświetlenie oraz znaczniki. Oprawa znajduje się pod `LobbyPresentation`, materiały w `Generated/Presentation/`.
-- `Round/Kuba.unity`: kopia istniejącej sceny OnlineTest, bez jej NetworkManagera i z punktami wejścia do rozgrywki. Kopia nie aktualizuje się automatycznie po zmianach oryginału.
+- `Lobby.unity`: cztery umeblowane pokoje wokół wspólnego korytarza i salonu, zielony pokój gotowości, oświetlenie oraz znaczniki. Oprawa znajduje się pod `LobbyPresentation`, a jej materiały w `Placeholders/Lobby/Materials/`.
+- `Kuba.unity`: obecna scena rozgrywki online, utworzona jako kopia OnlineTest bez jego NetworkManagera i z punktami wejścia do rozgrywki. Nie aktualizuje się automatycznie po zmianach sceny prototypowej.
 - `LobbyPlayer.prefab`: kopia gracza online z zachowanym ruchem i rigem, dopasowaną skalą grafiki, wydzielonymi materiałami stroju i pierścieniem przy stopach. `PlayerNetworkAppearance` otrzymuje od serwera paletę odpowiadającą pokojowi. Barwi właściwy renderer przez MaterialPropertyBlock, bez zmieniania wspólnego materiału innych graczy.
 - `LobbyCamera.prefab`: wspólna definicja projekcji, kadrowania i lokalnego profilu rysowania lobby.
 - `LobbySession.prefab`: ustawienia scen i pięciosekundowego oczekiwania.
@@ -35,32 +35,32 @@ Przyszły ekran podsumowania powinien wywołać `LobbySession.ReturnToLobby()` n
 
 ### Otwórz i dostosuj scenę
 
-1. Zapisz własną scenę przez **File > Save**. W oknie **Project** otwórz `Assets > Project > Scripts > Networking > Lobby > Generated`, a następnie kliknij dwukrotnie `Lobby`.
+1. Zapisz własną scenę przez **File > Save**. W oknie **Project** otwórz `Assets > Project > Scenes > Debug > Kuba`, a następnie kliknij dwukrotnie `Lobby`.
 2. W **Hierarchy > LobbyMarkers** znajdziesz `Player1_Spawn_MoveMe` do `Player4_Spawn_MoveMe`. Przesuwaj je narzędziem **Move (W)** do docelowych pokojów. Punkt oznacza pozycję głównego obiektu gracza; przy obecnej kapsule wysokość Y wynosi `1.1`, aby jej dolna część znajdowała się nad podłogą.
 3. Zaznacz `StartZone_MoveAndResizeMe`. **Transform > Position** przesuwa strefę, a **Box Collider > Size** ustawia jej rozmiar w metrach. Pozostaw **Is Trigger** włączone. Zielona podłoga i oznaczenia miejsc znajdują się w `LobbyPresentation > ReadyRoomDecor`; po przeniesieniu strefy przenieś również tę grupę wizualną.
-4. Zaznacz `LobbyCamera` lub otwórz `Generated/LobbyCamera.prefab`. **Camera > Projection: Perspective > Field of View** ustawia delikatność perspektywy. **Lobby Camera Framing > Board Bounds** określa środek i rozmiar stałej planszy w metrach; na tej podstawie dobierana jest odległość kamery. Kamera nie śledzi postaci. **Lobby Camera Rendering > Shadow Distance** określa zasięg cieni w metrach.
+4. Zaznacz `LobbyCamera` lub otwórz `Assets/Project/Prefabs/Cameras/LobbyCamera.prefab`. **Camera > Projection: Perspective > Field of View** ustawia delikatność perspektywy. **Lobby Camera Framing > Board Bounds** określa środek i rozmiar stałej planszy w metrach; na tej podstawie dobierana jest odległość kamery. Kamera nie śledzi postaci. **Lobby Camera Rendering > Shadow Distance** określa zasięg cieni w metrach.
 5. W oknie **Project** zaznacz `LobbySession.prefab`. Pola **Lobby Scene** i **Game Scene** zawierają pełne ścieżki scen. Po zmianie nazwy lub miejsca sceny popraw odpowiednią ścieżkę. **Ready Seconds** domyślnie wynosi `5`.
 6. Zapisz przez **Ctrl+S**, kliknij **Play**, a następnie **Host lobby**. Host pojawi się w swoim pokoju, kod będzie na dole, a napis u góry poprosi o drugiego gracza. Samotny host nie uruchomi rozgrywki.
-7. Drugi gracz uruchamia tę samą wersję gry, wpisuje kod w dolnym panelu i wybiera **Join lobby**. Do testu dwóch okien potrzebny jest build zawierający sceny `Generated/Lobby.unity` i `Generated/Round/Kuba.unity`, ze sceną Lobby jako pierwszą. Generator dodaje obie do wspólnej **File > Build Profiles > Open Scene List**, zachowując wcześniejsze pozycje; jeśli profil ma własną listę scen, dodaj je także tam. Dla prototypu zaznacz w tym profilu wyłącznie te dwie sceny, w tej kolejności.
+7. Drugi gracz uruchamia tę samą wersję gry, wpisuje kod w dolnym panelu i wybiera **Join lobby**. Do testu dwóch okien potrzebny jest build zawierający sceny `Assets/Project/Scenes/Debug/Kuba/Lobby.unity` i `Assets/Project/Scenes/Debug/Kuba/Kuba.unity`, ze sceną Lobby jako pierwszą w tym osobnym teście. W zwykłym buildzie pierwszą sceną pozostaje Main Menu. Generator dodaje obie do wspólnej **File > Build Profiles > Open Scene List**, zachowując wcześniejsze pozycje; jeśli profil ma własną listę scen, dodaj je także tam. Dla prototypu zaznacz w tym profilu wyłącznie te dwie sceny, w tej kolejności.
 
 Materiały oprawy używają standardowego URP Simple Lit i miękkich cieni. LobbyCameraRendering stosuje osobne wywołania rysowania i odpowiedni zasięg cieni wyłącznie podczas rysowania kamery lobby oraz Scene View aktywnego lobby. Przy zakończeniu rysowania i wyłączeniu komponentu przywraca poprzednie wartości. Globalne assety pipeline pozostają bez zmian. W testowanym trybie SRP Batcher mieszał kolory materiałów; lokalny profil kamery usuwa ten problem. Nie wprowadzono własnego shadera jako zależności.
 
-Wygląd buduje `Networking/Editor/LobbyPresentationBuilder.cs`, a sam prefab wizualny przygotowuje `LobbyPlayerVisualSetup.cs`. Skala jest na rodzicu PlayerVisualScale poza Animatorem; oryginalne kości, wierzchołki, kontroler i ścieżki klipów są zachowane. Materiały rozdzielają strój, kapelusz/rękawiczki, twarz i buty. Serwerowy adapter PlayerNetworkAppearance powiela kolor pokoju na pozostałe klienty. Po tej zmianie prefabu wszystkie okna testowe i gracze muszą używać nowego buildu. Polecenie **Tools > Kucharze > Online > Refresh Lobby Appearance** odświeża wyłącznie generowaną oprawę sceny, kamerę i światło; zachowuje znaczniki spawnów, strefę logiczną, LobbyEntry i konfigurację sieciową. Zapisz scenę i wyjdź z Play Mode przed jego użyciem. Polecenie zastępuje również wcześniejsze nazwane bryły prototypu; własne dodatki trzymaj poza grupą `LobbyPresentation`.
+Wygląd buduje `Networking/Editor/Lobby/LobbyPresentationBuilder.cs`, a sam prefab wizualny przygotowuje `LobbyPlayerVisualSetup.cs`. Skala jest na rodzicu PlayerVisualScale poza Animatorem; oryginalne kości, wierzchołki, kontroler i ścieżki klipów są zachowane. Materiały rozdzielają strój, kapelusz/rękawiczki, twarz i buty. Serwerowy adapter PlayerNetworkAppearance powiela kolor pokoju na pozostałe klienty. Po tej zmianie prefabu wszystkie okna testowe i gracze muszą używać nowego buildu. Polecenie **Tools > Kucharze > Online > Refresh Lobby Appearance** odświeża wyłącznie generowaną oprawę sceny, kamerę i światło; zachowuje znaczniki spawnów, strefę logiczną, LobbyEntry i konfigurację sieciową. Zapisz scenę i wyjdź z Play Mode przed jego użyciem. Polecenie zastępuje również wcześniejsze nazwane bryły prototypu; własne dodatki trzymaj poza grupą `LobbyPresentation`.
 
-Scena jest już wygenerowana. Polecenie **Tools > Kucharze > Online > Create Simple Lobby** jest przeznaczone do pierwszego utworzenia zestawu i odmawia nadpisywania istniejącego folderu. **Validate Simple Lobby** sprawdza podstawowe referencje i wspólną listę scen; nie jest testem rozgrywki. **Rebuild Lobby Room Layout** dodatkowo ustawia nowy układ 2×2, przesuwa cztery spawny oraz granice pokoju gotowości; **Refresh Lobby Appearance** zachowuje ręcznie przesunięte znaczniki i strefę.
+Scena jest już wygenerowana. Polecenie **Tools > Kucharze > Online > Create Simple Lobby** jest przeznaczone do pierwszego utworzenia zestawu i odmawia nadpisywania istniejących scen i prefabów. **Validate Simple Lobby** sprawdza podstawowe referencje i wspólną listę scen; nie jest testem rozgrywki. **Rebuild Lobby Room Layout** dodatkowo ustawia nowy układ 2×2, przesuwa cztery spawny oraz granice pokoju gotowości; **Refresh Lobby Appearance** zachowuje ręcznie przesunięte znaczniki i strefę.
 
-Do przygotowania programu z właściwymi scenami wybierz **Tools > Kucharze > Online > Build Lobby Test** po wyjściu z Play Mode. Narzędzie sprawdza konfigurację, czeka na kompilację i buduje wariant Windows Development ze scenami Lobby i Round/Kuba, w tej kolejności. Wynik znajduje się w `%TEMP%/KucharzeLobbyTest/KucharzeLobbyTest.exe`; cały folder można skopiować poza katalog tymczasowy. Obie osoby muszą używać aktualnej wersji. Osobne polecenie **Build Windows Test** nadal buduje wcześniejszą scenę OnlineTest.
+Do przygotowania programu z właściwymi scenami wybierz **Tools > Kucharze > Online > Build Lobby Test** po wyjściu z Play Mode. Narzędzie sprawdza konfigurację, czeka na kompilację i buduje wariant Windows Development ze scenami Lobby i Kuba, w tej kolejności. Wynik znajduje się w `%TEMP%/KucharzeLobbyTest/KucharzeLobbyTest.exe`; cały folder można skopiować poza katalog tymczasowy. Obie osoby muszą używać aktualnej wersji. Osobne polecenie **Build Windows Test** nadal buduje wcześniejszą scenę OnlineTest.
 
 `Networking/Tests/LobbySmokeProbe` jest uruchamiany wyłącznie jawnym argumentem `-kucharze-lobby-probe` w edytorze lub buildzie Development. Używa lokalnego transportu i technicznych przestawień postaci do sprawdzania reguł strefy; nie testuje klawiatury, pada ani kolizji. Test sprawdza też niezależne, replikowane kolory i bloki materiałów czterech postaci. Ta część wymaga aktywnego urządzenia graficznego: nie dodawaj `-nographics`. Wyniki rzeczywiście wykonanych sprawdzeń są zapisywane w `Documentation/Movement/Validation.md`.
 
 ## Konfiguracja przygotowana automatycznie w tym projekcie
 
-Scena testowa: `Assets/Project/Scripts/Networking/Setup/OnlineTest.unity`.
-Prefab online: `Assets/Project/Scripts/Networking/Setup/OnlinePlayer.prefab`.
-Lista prefabów sieciowych: `Assets/Project/Scripts/Networking/Setup/OnlineNetworkPrefabs.asset`.
+Scena testowa: `Assets/Project/Scenes/Debug/Kuba/Prototypes/OnlineTest.unity`.
+Prefab online: `Assets/Project/Development/Networking/OnlinePlayer.prefab`.
+Lista prefabów sieciowych: `Assets/Project/Development/Networking/OnlineNetworkPrefabs.asset`.
 Scena jest kopią sceny Kuba; oryginalna scena i prefab Player pozostają osobnymi assetami. Jeśli oryginalna scena ma niezapisane zmiany, automat pozostawia ją otwartą. Zapisz swoją pracę przed otwarciem sceny OnlineTest dwuklikiem w Project.
 
-Pakiety NGO 2.14.0 i Multiplayer Services 2.3.3 są już w manifest.json. KUCHARZE_ONLINE jest włączone dla Standalone. Project ID w Player Settings wskazuje projekt używany przez grę. Osobno edytor musi być zalogowany i powiązany z projektem oraz organizacją przez Unity Connect. Sam zapis Project ID nie tworzy tego pełnego powiązania.
+Pakiety NGO 2.14.0 i Multiplayer Services 2.3.3 są już w manifest.json. KUCHARZE_ONLINE jest włączone dla Standalone i Android. Project ID w Player Settings wskazuje projekt używany przez grę. Osobno edytor musi być zalogowany i powiązany z projektem oraz organizacją przez Unity Connect. Sam zapis Project ID nie tworzy tego pełnego powiązania.
 
 Narzędzia edytora znajdują się w **Tools > Kucharze > Online**:
 
@@ -80,9 +80,24 @@ Komunikaty URP wymieniające assety oraz informacje Performance Testing o tworze
 
 Host uruchamia grę na swoim komputerze i jednocześnie jest graczem oraz serwerem. Druga osoba wpisuje kod. Relay przekazuje dane między uczestnikami przez internet; nadal to komputer hosta oblicza grę. Host musi pozostać w grze. Zamknięcie hosta kończy połączenie pozostałych osób. Nie ma przejmowania roli hosta.
 
-Pierwszy test wykonujemy w jednej wspólnej scenie rozgrywki. Panel połączenia jest prostym panelem testowym, niezależnym od docelowego menu głównego. Stary skrypt UI/MainMenu.cs usunięto na prośbę użytkownika; menu będzie tworzone od nowa. Przyciski nowego menu można później podłączyć do RelayConnection.Host i RelayConnection.Join.
+Pierwszy test wykonujemy w jednej wspólnej scenie rozgrywki. Panel połączenia jest prostym panelem testowym. Nowe [menu główne](../UI/MainMenu.md) znajduje się w Assets/Project/Scenes/Debug/Kuba/Main Menu.unity. Korzysta z istniejącego prefabu LobbyConnection: HostInScene przygotowuje Relay i ładuje lobby przed StartHost, a Join dołącza klienta i pozwala Netcode zsynchronizować scenę. Wejście przez menu ustawia Main Menu jako scenę powrotu po rozłączeniu; bezpośredni test lobby zachowuje poprzedni powrót do lobby. Ruch, autorytet serwera i gotowość 2–4 graczy pozostają niezależne od menu.
 
 Poniższe kroki pozostają instrukcją konfiguracji od początku. W tym projekcie wykonano już lokalną konfigurację opisaną powyżej i sprawdzono Relay. Bez symbolu KUCHARZE_ONLINE pliki sieciowe są pomijane, a dotychczasowa gra bez adapterów sieciowych zachowuje tryb lokalny.
+
+## Szybki test obecnego Main Menu — jeden komputer
+
+Do tego testu użyj jednego edytora i jednego aktualnego buildu (samodzielnego programu gry), z internetem. Kod używa osobnych profili Authentication „editor” oraz „player”. Nie uruchamiaj dwóch kopii tego samego buildu na jednym komputerze jako pierwszego testu — współdzielą profil „player”.
+
+1. Zapisz scenę i poczekaj na zakończenie kompilacji. Otwórz **File > Build Profiles**, wybierz **Windows**, następnie **Open Scene List**. Jeżeli profil ma własną listę, sprawdź jego listę zamiast wspólnej.
+2. Pierwsza włączona scena ma być **Assets/Project/Scenes/Debug/Kuba/Main Menu.unity**. Włączone muszą być też **Assets/Project/Scenes/Debug/Kuba/Lobby.unity** i **Assets/Project/Scenes/Debug/Kuba/Kuba.unity**. Pozostałe wpisy mogą zostać.
+3. Wybierz **Build** i nowy folder poza Assets, np. **Builds/MainMenuTest**. W tym teście nie używaj **Build Lobby Test** ani **Build Windows Test** — te narzędzia budują osobne sceny testowe z pominięciem Main Menu.
+4. W edytorze otwórz Main Menu, naciśnij **Play**, następnie w grze **Play > Host Game**. Oczekuj załadowania lobby, jednej postaci i kodu lobby.
+5. Uruchom .exe z nowego folderu buildu. Wybierz **Play**, wpisz kod hosta do **Lobby code** i kliknij **Join Game**. Oczekuj tego samego lobby i dwóch postaci w obu oknach.
+6. Przełączaj aktywne okno i poruszaj graczem. Każde okno ma sterować wyłącznie swoją postacią; pozycje obu postaci powinny być widoczne po obu stronach.
+7. Wejdź obiema postaciami do zielonego pokoju gotowości. Po wspólnych pięciu sekundach powinny przejść do rozgrywki. Sam host nie rozpoczyna gry. Wyjście jednej postaci ze strefy przed upływem czasu ma resetować odliczanie.
+8. Rozłącz klienta, a następnie zakończ hostowanie i sprawdź reakcję pozostałego okna. Kolejne hostowanie tworzy nowy kod.
+
+Do testu z kolegą na drugim komputerze wyślij cały folder tego samego aktualnego buildu, najlepiej ZIP. Jedna osoba wybiera Host Game i podaje kod, druga Join Game. Jeśli host nie dostaje kodu, odczytaj komunikat Connection status i czerwony błąd Console. Sprawdź internet oraz **Edit > Project Settings > Services** — projekt musi być powiązany z właściwym Unity Cloud Project, z przygotowanym Relay/Authentication. Nie przebudowuj istniejącego lobby przez generator tylko po to, aby wykonać ten test.
 
 ## 1. Zainstaluj pakiety — potrzebne teraz
 
@@ -205,3 +220,9 @@ Brak predykcji oznacza, że klient widzi reakcję po podróży danych do hosta i
 - Różne sceny: przebuduj grę i sprawdź listę scen; pierwsza scena testowa musi być taka sama.
 
 Po zmianach konfiguracji prefabu lub sceny wykonaj nowy build przed porównywaniem edytora z programem.
+
+## Bieżący zakres Androida
+
+Celem mobilnym jest zwykły Android, nie gogle Android XR. Symbol KUCHARZE_ONLINE musi być obecny dla Androida niezależnie od Standalone; inaczej mobilny build pominie MainMenuOnlinePanel, RelayConnection i adaptery graczy. Został dodany do wspólnych Player Settings. Przy własnych nadpisaniach symboli w profilu sprawdź także ten profil. Wspólna lista zawiera Main Menu jako pierwszą scenę oraz Lobby i Kuba.
+
+Pełna obsługa dotyku gry nie jest jeszcze ukończona: w Lobby brakuje FloatingJoystick, który istnieje w Kuba, a wygenerowane sceny nie zawierają ekranowych przycisków Run/Dash. Zewnętrzny pad może dostarczać te wejścia; sam ekran dotykowy nie zapewnia obecnie całego przepływu lobby i wszystkich akcji. Brak tych kontrolek nie jest błędem Main Menu ani protokołu Relay. Dokładne wyniki aktualnego audytu i ograniczenia sprawdzeń znajdują się w Documentation/Movement/Validation.md.

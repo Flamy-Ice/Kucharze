@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace ModularMovement
 {
@@ -17,6 +18,7 @@ namespace ModularMovement
         private Texture2D cardTexture, shadowTexture, badgeTexture;
         private GUIStyle cardStyle, shadowStyle, badgeBackground;
         private readonly List<Texture2D> textures = new List<Texture2D>();
+        public string HiddenScene { get; set; }
 
         private void Awake()
         {
@@ -33,6 +35,7 @@ namespace ModularMovement
 
         private void OnGUI()
         {
+            if (!string.IsNullOrEmpty(HiddenScene) && SceneManager.GetActiveScene().path == HiddenScene) return;
             EnsureStyles();
             Matrix4x4 previousMatrix = GUI.matrix;
             bool previousEnabled = GUI.enabled;

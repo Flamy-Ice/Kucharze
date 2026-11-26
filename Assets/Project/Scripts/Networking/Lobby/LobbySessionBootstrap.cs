@@ -13,6 +13,7 @@ namespace ModularMovement
         private NetworkManager manager;
         private bool returnToEntry;
         public LobbySession Session { get; private set; }
+        public string EntryScene { get; set; }
 
         private void Awake()
         {
@@ -35,7 +36,8 @@ namespace ModularMovement
         {
             if (!returnToEntry || manager.IsListening || manager.ShutdownInProgress) return;
             returnToEntry = false;
-            string scene = sessionPrefab.GetComponent<LobbySession>().LobbyScenePath;
+            string scene = string.IsNullOrEmpty(EntryScene)
+                ? sessionPrefab.GetComponent<LobbySession>().LobbyScenePath : EntryScene;
             // A disconnected client needs its local entry scene; it no longer has a server to load one.
             if (SceneManager.GetActiveScene().path != scene && Application.CanStreamedLevelBeLoaded(scene))
                 SceneManager.LoadScene(scene);

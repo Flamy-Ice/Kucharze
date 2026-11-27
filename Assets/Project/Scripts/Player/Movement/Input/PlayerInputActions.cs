@@ -41,6 +41,24 @@ namespace ModularMovement
         private bool configurationDirty = true;
         private bool initializationFailed;
         private IPlayerInputSource externalSource;
+        internal PlayerInputSnapshot? SimulationSnapshot { get; set; }
+
+        internal PlayerInputSnapshot CaptureReadings() => new PlayerInputSnapshot
+        {
+            Move = MoveInput, RunHeld = RunHeld, RunPressCount = RunPressCount, DashPressCount = DashPressCount,
+            ResetVersion = InputResetVersion, DashResetVersion = DashInputResetVersion, DashAvailable = DashInputAvailable
+        };
+
+        internal void RestoreReadings(PlayerInputSnapshot value)
+        {
+            MoveInput = value.Move;
+            RunHeld = value.RunHeld;
+            RunPressCount = value.RunPressCount;
+            DashPressCount = value.DashPressCount;
+            InputResetVersion = value.ResetVersion;
+            DashInputResetVersion = value.DashResetVersion;
+            DashInputAvailable = value.DashAvailable;
+        }
 
         // A remote source replaces device readings only for this player.
         public void SetExternalSource(IPlayerInputSource source)
@@ -192,9 +210,9 @@ namespace ModularMovement
         // The resolver reads once per step, then gives all movement modules the same input.
         internal Vector2 ReadSnapshot()
         {
-            if (isActiveAndEnabled && externalSource != null)
+            if (isActiveAndEnabled && (SimulationSnapshot.HasValue || externalSource != null))
             {
-                PlayerInputSnapshot snapshot = externalSource.ReadInput();
+                PlayerInputSnapshot snapshot = SimulationSnapshot ?? externalSource.ReadInput();
                 Vector2 direction = snapshot.Move;
                 if (float.IsNaN(direction.x) || float.IsNaN(direction.y)
                     || float.IsInfinity(direction.x) || float.IsInfinity(direction.y))

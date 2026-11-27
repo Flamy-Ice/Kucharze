@@ -45,6 +45,33 @@ namespace ModularMovement
         // These readings describe this ability. A wall may still stop the player's actual movement.
         public float CooldownRemaining { get; private set; }
         public bool IsDashing => remainingDuration > 0f;
+
+        public struct SimulationState
+        {
+            public Vector3 LastDirection, Direction;
+            public float Remaining, Duration, Cooldown;
+            public uint PressCount, ResetVersion;
+        }
+
+        public SimulationState CaptureSimulation() => new SimulationState
+        {
+            LastDirection = lastDirection, Direction = dashDirection, Remaining = remainingDuration,
+            Duration = activeDuration, Cooldown = CooldownRemaining, PressCount = lastPressCount,
+            ResetVersion = lastResetVersion
+        };
+
+        public void RestoreSimulation(SimulationState state)
+        {
+            lastDirection = state.LastDirection.sqrMagnitude > 0 ? state.LastDirection : Vector3.forward;
+            dashDirection = state.Direction;
+            remainingDuration = state.Remaining;
+            activeDuration = state.Duration;
+            CooldownRemaining = state.Cooldown;
+            lastPressCount = state.PressCount;
+            lastResetVersion = state.ResetVersion;
+            pendingDashStarted = false;
+            stepDuration = 0;
+        }
         // Keeps the final step at one until another dash starts or this ability is reset.
         public float DashProgress => activeDuration > 0f
             ? Mathf.Clamp01(1f - remainingDuration / activeDuration) : 0f;

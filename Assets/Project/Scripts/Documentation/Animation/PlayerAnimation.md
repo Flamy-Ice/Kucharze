@@ -10,3 +10,6 @@ Domyślny kontroler znajduje się w `Assets/Project/Shared/Characters/Animations
 ## Wizualny wariant gracza lobby
 
 LobbyPlayer ma rodzica PlayerVisualScale nad PlayerModel. Zmiana proporcji odbywa się poza Animatorem, więc klipy nie nadpisują tej skali. Przy rozdzieleniu materiałów zachowano wierzchołki, wagi i bind poses oryginalnego mesha; zmieniają się wyłącznie grupy trójkątów. Kontroler, root motion i ścieżki do kości pozostają zgodne z oryginałem. Kolor stroju jest prezentacją sieciową w PlayerNetworkAppearance; PlayerAnimation nadal odpowiada tylko za wybór animacji.
+
+
+Remote presentation uses PlayerPresentationTimeline: complete timestamped animation samples follow the same render clock as NetworkTransform. Dash progress advances between samples; dash effects start when the delayed animation reaches that dash. PlayerNetworkState applies readings before PlayerAnimation.Update. Owner prediction and local animation keep their existing path.

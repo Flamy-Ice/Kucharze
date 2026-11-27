@@ -24,6 +24,32 @@ namespace ModularMovement
         // The last move's distance, speed and contact with the ground.
         public MotorResult LastResult { get; private set; }
 
+        public PlayerMotorSnapshot CaptureSimulation()
+        {
+            var local = GetComponent<PlayerContext>();
+            return new PlayerMotorSnapshot
+            {
+                Position = transform.position, Velocity = local.States.ActualVelocity,
+                VerticalVelocity = local.Gravity.VerticalVelocity, Grounded = local.States.IsGrounded,
+                Source = local.States.ActiveMovementSource
+            };
+        }
+
+        // A network correction restores a checkpoint; normal locomotion still uses Move below.
+        public void RestoreSimulation(PlayerMotorSnapshot snapshot)
+        {
+            var local = GetComponent<PlayerContext>();
+            bool active = local.CharacterController.enabled;
+            local.CharacterController.enabled = false;
+            transform.position = snapshot.Position;
+            local.CharacterController.enabled = active;
+            local.Gravity.RestoreSimulation(snapshot.VerticalVelocity, snapshot.Grounded);
+            local.States.SetActiveMovementSource(local.Resolver, snapshot.Source);
+            LastResult = new MotorResult(Vector3.zero, snapshot.Velocity, snapshot.Grounded, CollisionFlags.None);
+            MotorResult result = LastResult;
+            local.States.ApplyMotorResult(this, in result, movingSpeedThreshold);
+        }
+
         // The resolver checks that required components are available before requesting a move.
         internal bool CanMove()
         {

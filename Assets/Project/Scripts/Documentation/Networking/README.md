@@ -207,7 +207,7 @@ Dodawaj te adaptery wyłącznie do obiektów online. Sam CoinWallet i CountdownT
 
 Repliki dostają stan prezentacji, a nie pełny lokalny stan symulacji providerów. Ich PlayerDash.IsDashing/CooldownRemaining i PlayerMotor.LastResult nie są serwerowym odczytem — debug tych pól na kliencie może pokazywać lokalne wartości początkowe. Aktualna animacja korzysta z osobno replikowanego postępu. Sieć nie odtwarza pozostałych zdarzeń przejść PlayerBus na klientach.
 
-Brak predykcji oznacza, że klient widzi reakcję po podróży danych do hosta i z powrotem. Do pierwszego testu współpracy to świadomie prosty fundament; płynność przy większym opóźnieniu wymaga pomiarów po uruchomieniu. Nie dodano zapisu wyników, dobierania losowych graczy, listy lobby, przejmowania hosta ani nowego gameplayu.
+Ruch właściciela jest teraz przewidywany lokalnie przez ten sam PlayerMotor, a host pozostaje źródłem prawdy. Klient wysyła numerowane wejścia, otrzymuje potwierdzone punkty kontrolne i odtwarza niepotwierdzone kroki po korekcie. Inne postacie pozostają replikami serwera. Szczegóły i ograniczenia aktualizacji opisuje sekcja poniżej.
 
 ## Gdy coś nie działa
 
@@ -297,3 +297,17 @@ Wspólna LobbyPlayerColors definiuje nasycone kolory niebieski, czerwony, fiolet
 ### Przywrócenie grafiki panelu kodu — 2026-11-27
 
 Na prośbę użytkownika przywrócono oryginalne clock-background.png, biały tint i rozmiar panelu 400 × 151. Zastępuje to wcześniejszą zmianę tła na ciemny prostokąt. Kod nadal ma rozmiar 80 i własny materiał fontu; jego kolor jest teraz ciemnogranatowy #152734, dopasowany do jasnej części oryginalnej grafiki. Generator Refresh Lobby UI zachowuje tę grafikę. Nie podmieniać dostarczonego tła panelu przy kolejnych poprawkach czytelności kodu.
+
+
+## Predykcja ruchu i pomiar opóźnienia — 2026-11-27
+
+PlayerNetworkInput odpowiada za RPC wejść i punktów kontrolnych. PlayerNetworkPrediction prowadzi stałe kroki 60 Hz, historię do 128 wejść oraz odtwarzanie po potwierdzeniu hosta. Klient przesyła wyłącznie swoje sterowanie — nigdy docelową pozycję ani czas kroku. Serwer ogranicza kolejkę i budżet symulacji do własnego upływu czasu. Wejścia i potwierdzenia używają kanału Unreliable; każda wiadomość wejścia powtarza trzy ostatnie kroki, a liczniki Run/Dash zachowują przyciski pomiędzy wiadomościami. Serwer może odrzucić nieprawidłowe, stare lub nadmiernie wyprzedzające wejścia. Tylko właściciel wysyła sterowanie, a tylko serwer wysyła potwierdzenia.
+
+Właściciel symuluje te same Walk/Run/Dash, wspólne przyspieszanie i CharacterController przez jedyny PlayerMotor. Punkty kontrolne obejmują pozycję, prędkość, grawitację, kontakt z ziemią oraz stan Toggle Run, Dash i cooldown. Odtwarzanie nie powiela zdarzeń audio/VFX; drobne korekty wygaszają przesunięcie samej grafiki, duże korygują ją od razu. Teleportacja i zmiana blokady ruchu zmieniają epokę, unieważniając wcześniejsze wejścia. Po braku wejść przez 0.5 s serwer zatrzymuje ruch i wymaga świeżej epoki. Inne klienty odtwarzają NetworkTransform z Unreliable Deltas i krótszym dodatkowym wygładzaniem; obrót modelu jest interpolowany. Lokalny właściciel nie jest nadpisywany opóźnioną interpolacją pozycji.
+
+NetworkConnectionDiagnostics jest zapewniany przez RelayConnection i nie zmienia ustawień połączenia ani FPS. Wciśnij F8 w każdym oknie: HOST/CLIENT, FPS, średni czas klatki, transportowe RTT, zmiana RTT pomiędzy próbkami oraz wiek potwierdzenia i wielkość korekt właściciela pomagają oddzielić spadki wydajności od opóźnienia sieci. Zmiana RTT nie jest pomiarem jittera pakietów. Overlay jest domyślnie ukryty; F8 przełącza go lokalnie.
+
+Po zmianie RPC przebuduj grę dla wszystkich uczestników; stare buildy są niezgodne. Predykcja poprawia reakcję własnej postaci, ale nie usuwa czasu przesyłania danych ani opóźnienia obserwacji innych postaci. Zderzenia z poruszającymi się graczami mogą wymagać korekt, ponieważ klient widzi ich wcześniejsze pozycje. Mechanizm odtwarza obecne Walk/Run/Dash; przyszłe stanowe zdolności wymagają dodania własnego stanu do punktów kontrolnych.
+
+
+Remote animation correction: PlayerNetworkState replicates velocity, facing, source and dash phase together in PlayerPresentationFrame. PlayerPresentationTimeline buffers these samples on NetworkTransform's render clock (including its interpolation mode and tick offset). The extra position lerp is disabled; model facing is interpolated in the same timeline rather than independently chasing a newer rotation. Dash effects use the presented dash ID instead of an earlier separate RPC. Positions still come from the server-authoritative NetworkTransform; remote replicas never run locomotion. All peers require the updated build because the replication layout changed.

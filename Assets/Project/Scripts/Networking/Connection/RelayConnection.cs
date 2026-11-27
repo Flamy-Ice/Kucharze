@@ -33,6 +33,7 @@ namespace ModularMovement
         private void Awake()
         {
             manager = GetComponent<NetworkManager>();
+            if (GetComponent<NetworkConnectionDiagnostics>() == null) gameObject.AddComponent<NetworkConnectionDiagnostics>();
             transport = GetComponent<UnityTransport>();
             manager.NetworkConfig.NetworkTransport = transport;
             manager.OnClientConnectedCallback += OnConnected;

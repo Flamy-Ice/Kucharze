@@ -65,6 +65,28 @@ namespace ModularMovement
         // This is the running choice, not proof of movement. A wall can still stop the player.
         public bool IsRunRequested { get; private set; }
 
+        public struct SimulationState
+        {
+            public uint PressCount, ResetVersion;
+            public bool ToggledOn, Requested;
+        }
+
+        public SimulationState CaptureSimulation() => new SimulationState
+        {
+            PressCount = lastPressCount, ResetVersion = lastResetVersion,
+            ToggledOn = toggledOn, Requested = IsRunRequested
+        };
+
+        public void RestoreSimulation(SimulationState state)
+        {
+            lastPressCount = state.PressCount;
+            lastResetVersion = state.ResetVersion;
+            toggledOn = state.ToggledOn;
+            IsRunRequested = state.Requested;
+            observedAlwaysRun = alwaysRun;
+            observedActivationMode = activationMode;
+        }
+
         // Adding Run also supplies any missing foundation components.
         private void Awake() => PlayerMovementDependencies.EnsureDependencies(gameObject);
 

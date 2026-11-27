@@ -23,6 +23,21 @@ namespace ModularMovement
 
         // A network adapter blocks simulation on copies that only display server results.
         public bool SimulationEnabled { get; set; } = true;
+        public bool ManualSimulation { get; set; }
+
+        // A network tick supplies one input reading without replacing the local device actions.
+        public void Simulate(float deltaTime, PlayerInputSnapshot snapshot)
+        {
+            var localInput = GetComponent<PlayerInputActions>();
+            PlayerInputSnapshot previous = localInput.CaptureReadings();
+            localInput.SimulationSnapshot = snapshot;
+            try { Step(deltaTime); }
+            finally
+            {
+                localInput.SimulationSnapshot = null;
+                localInput.RestoreReadings(previous);
+            }
+        }
 
         // Other scripts may read this list; Register and Unregister control who can offer movement.
         public IReadOnlyList<IMovementProvider> Providers => providers.AsReadOnly();
@@ -68,7 +83,7 @@ namespace ModularMovement
         private void Update()
         {
             // Unity calls Update every frame. One coordinator keeps all movement in the same step.
-            Step(Time.deltaTime);
+            if (!ManualSimulation) Step(Time.deltaTime);
         }
 
         internal void Step(float deltaTime)

@@ -9,6 +9,8 @@ namespace ModularMovement
     [AddComponentMenu("")]
     public sealed class PlayerBus : MonoBehaviour
     {
+        // Replaying corrected history must not play the same effects a second time.
+        public bool SuppressEvents { get; set; }
         // Other scripts can ask to be told about changes and stop listening when they turn off.
         // Each notification can include details, such as the new movement speed.
 
@@ -55,7 +57,7 @@ namespace ModularMovement
 
         private void Publish(Action listeners)
         {
-            if (listeners == null) return;
+            if (SuppressEvents || listeners == null) return;
             foreach (Action listener in listeners.GetInvocationList())
             {
                 try { listener(); }
@@ -69,7 +71,7 @@ namespace ModularMovement
         // Send the same reading to every script listening for this change.
         private void Publish<T>(Action<T> listeners, T value)
         {
-            if (listeners == null) return;
+            if (SuppressEvents || listeners == null) return;
 
             // Use the current list of listeners, even if one of them stops listening during delivery.
             foreach (Action<T> listener in listeners.GetInvocationList())
@@ -89,7 +91,7 @@ namespace ModularMovement
         // The same delivery process for events carrying two values, such as a name and velocity.
         private void Publish<TFirst, TSecond>(Action<TFirst, TSecond> listeners, TFirst first, TSecond second)
         {
-            if (listeners == null) return;
+            if (SuppressEvents || listeners == null) return;
 
             foreach (Action<TFirst, TSecond> listener in listeners.GetInvocationList())
             {

@@ -25,6 +25,33 @@ namespace ModularMovement
         private int initialCoins;
         private bool useRelay;
         private RelayConnection connection;
+        private float moveRequestedAt = -1, ownerMovedAt = -1;
+        private int remoteDashSamples;
+        private float lastRemoteDashProgress = -1;
+
+        private void LateUpdate()
+        {
+            if (role != "client" || manager == null || !manager.IsListening) return;
+            foreach (var player in FindObjectsByType<PlayerNetworkState>())
+            {
+                if (!player.IsSpawned || player.IsOwner) continue;
+                var state = player.GetComponent<PlayerStates>();
+                if (state.ActiveMovementSource != "Dash") continue;
+                if (state.ReplicaDashProgress + 0.001f < lastRemoteDashProgress)
+                {
+                    Finish("FAILED: remote dash animation went backwards", 1);
+                    return;
+                }
+                lastRemoteDashProgress = state.ReplicaDashProgress;
+                remoteDashSamples++;
+                var animation = player.GetComponent<PlayerAnimation>();
+                if (animation != null && animation.CurrentState != PlayerAnimation.DashState)
+                {
+                    Finish("FAILED: remote animation did not match the presented dash", 1);
+                    return;
+                }
+            }
+        }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Install()
@@ -94,13 +121,21 @@ namespace ModularMovement
                 }
             }
             float elapsed = Time.realtimeSinceStartup - bothAt;
+            if (moveRequestedAt >= 0 && ownerMovedAt < 0 && manager.LocalClient.PlayerObject.GetComponent<PlayerStates>().PlanarSpeed > 0.1f)
+            {
+                ownerMovedAt = Time.realtimeSinceStartup;
+                if (role == "client" && manager.LocalClient.PlayerObject.GetComponent<PlayerNetworkPrediction>().PendingInputCount == 0)
+                    throw new Exception("The owner did not move ahead of its server acknowledgement.");
+            }
             if (!movementChecked && elapsed > 1f)
             {
+                if (role == "client" && (ownerMovedAt < 0 || ownerMovedAt - moveRequestedAt > 0.08f))
+                    throw new Exception("The owner waited for the server before moving.");
                 foreach (var player in players)
                 {
                     var resolver = player.GetComponent<PlayerMovementResolver>();
                     var state = player.GetComponent<PlayerStates>();
-                    if (resolver.SimulationEnabled != manager.IsServer) throw new Exception("Wrong movement authority.");
+                    if (resolver.SimulationEnabled != (manager.IsServer || player.IsOwner)) throw new Exception("Wrong movement prediction role.");
                     Vector3 velocity = state.ActualVelocity;
                     if (player.OwnerClientId == 0 && velocity.x <= 0.1f) throw new Exception("Host did not move along X.");
                     if (player.OwnerClientId != 0 && velocity.z <= 0.1f) throw new Exception("Client did not move along Z.");
@@ -120,6 +155,8 @@ namespace ModularMovement
             if (elapsed > 2.8f && !dashChecked)
             {
                 if (acceptedDashes != 1) throw new Exception("Expected one accepted owner dash, got " + acceptedDashes);
+                if (role == "client" && remoteDashSamples < 2)
+                    throw new Exception("Remote dash was not presented over multiple frames.");
                 dashChecked = true;
             }
             if (role == "client" && elapsed > 3.2f && movementChecked && dashChecked)
@@ -128,15 +165,27 @@ namespace ModularMovement
 
         public PlayerInputSnapshot ReadInput()
         {
+            bool move = bothAt >= 0 && Time.realtimeSinceStartup - bothAt >= 0.2f;
+            if (move && moveRequestedAt < 0) moveRequestedAt = Time.realtimeSinceStartup;
             bool dash = bothAt >= 0f && Time.realtimeSinceStartup - bothAt > 1.6f;
             return new PlayerInputSnapshot
             {
-                Move = role == "host" ? Vector2.right : Vector2.up,
+                Move = !move ? Vector2.zero : role == "host" ? Vector2.right : Vector2.up,
                 DashAvailable = true, DashPressCount = dash ? 1u : 0u
             };
         }
 
-        private static string RelayCodePath => Path.Combine(Path.GetTempPath(), "KucharzeOnlineSmoke", "relay-code.txt");
+        private static string ReportDirectory
+        {
+            get
+            {
+                const string prefix = "-kucharze-smoke-dir=";
+                string argument = Environment.GetCommandLineArgs().FirstOrDefault(value => value.StartsWith(prefix));
+                return argument != null ? argument.Substring(prefix.Length) : Path.Combine(Path.GetTempPath(), "KucharzeOnlineSmoke");
+            }
+        }
+
+        private static string RelayCodePath => Path.Combine(ReportDirectory, "relay-code.txt");
 
         private async Task BeginRelayAsync()
         {
@@ -158,7 +207,10 @@ namespace ModularMovement
 
         private void Finish(string result, int exitCode)
         {
-            string directory = Path.Combine(Path.GetTempPath(), "KucharzeOnlineSmoke");
+            if (moveRequestedAt >= 0 && ownerMovedAt >= 0)
+                result += "\nOwner response: " + ((ownerMovedAt - moveRequestedAt) * 1000).ToString("F1") + " ms";
+            if (role == "client") result += "\nRemote dash frames: " + remoteDashSamples;
+            string directory = ReportDirectory;
             Directory.CreateDirectory(directory);
             File.WriteAllText(Path.Combine(directory, role + ".result"), result);
             enabled = false;

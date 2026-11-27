@@ -40,6 +40,12 @@ namespace ModularMovement
         // The motor updates ground contact after each completed move.
         public bool IsGrounded { get; private set; }
 
+        internal void RestoreSimulation(float velocity, bool grounded)
+        {
+            VerticalVelocity = velocity;
+            IsGrounded = grounded;
+        }
+
         // The motor calls this before moving, using the step's elapsed time in seconds.
         internal float CalculateVelocity(float deltaTime)
         {

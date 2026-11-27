@@ -125,7 +125,7 @@ namespace ModularMovement
             while (Time.realtimeSinceStartup < until) yield return null;
             Check(session.SecondsRemaining > 0, "Two players did not start the countdown.");
             NetworkObject second = manager.ConnectedClientsList.First(c => c.ClientId != 0).PlayerObject;
-            Place(second, new Vector3(0, 1.1f, 0));
+            Place(second, new Vector3(0, 1.1f, 2.2f));
             yield return null;
             yield return null;
             Check(session.SecondsRemaining == 0, "Leaving did not reset the countdown.");

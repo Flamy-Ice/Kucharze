@@ -94,26 +94,27 @@ MonoBehaviour:
     scenePath: Assets/Project/Scenes/Debug/Kuba/Kuba.unity
     icon: {fileID: 0}
   - title: Level 2
-    scenePath:
+    scenePath: Assets/Project/Scenes/Debug/Kuba/Kuba.unity
     icon: {fileID: 0}
   - title: Level 3
-    scenePath:
+    scenePath: Assets/Project/Scenes/Debug/Kuba/Kuba.unity
     icon: {fileID: 0}
   - title: Level 4
-    scenePath:
+    scenePath: Assets/Project/Scenes/Debug/Kuba/Kuba.unity
     icon: {fileID: 0}
   - title: Level 5
-    scenePath:
+    scenePath: Assets/Project/Scenes/Debug/Kuba/Kuba.unity
     icon: {fileID: 0}
   - title: Level 6
-    scenePath:
+    scenePath: Assets/Project/Scenes/Debug/Kuba/Kuba.unity
     icon: {fileID: 0}
   - title: Level 7
-    scenePath:
+    scenePath: Assets/Project/Scenes/Debug/Kuba/Kuba.unity
     icon: {fileID: 0}
   - title: Level 8
-    scenePath:
+    scenePath: Assets/Project/Scenes/Debug/Kuba/Kuba.unity
     icon: {fileID: 0}
   - title: Level 9
-    scenePath:
+    scenePath: Assets/Project/Scenes/Debug/Kuba/Kuba.unity
     icon: {fileID: 0}
+  selectionHoldSeconds: 0

@@ -12,11 +12,6 @@ namespace ModularMovement
         private readonly NetworkVariable<byte> palette = new NetworkVariable<byte>();
         private MaterialPropertyBlock properties;
         private static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
-        private static readonly Color[] Colors =
-        {
-            new Color(0.23f, 0.57f, 0.77f), new Color(0.83f, 0.36f, 0.23f),
-            new Color(0.57f, 0.40f, 0.73f), new Color(0.85f, 0.63f, 0.18f)
-        };
 
         public byte PaletteIndex => palette.Value;
 
@@ -28,7 +23,7 @@ namespace ModularMovement
 
         public void SetPalette(int index)
         {
-            if (IsServer && IsSpawned && index >= 0 && index < Colors.Length) palette.Value = (byte)index;
+            if (IsServer && IsSpawned && index >= 0 && index < LobbyPlayerColors.Count) palette.Value = (byte)index;
         }
 
         private void OnPaletteChanged(byte previous, byte current) => Apply();
@@ -45,7 +40,7 @@ namespace ModularMovement
                 {
                     if (materials[index] == null || !materials[index].HasProperty(BaseColor)) continue;
                     renderer.GetPropertyBlock(properties, index);
-                    Color color = index == 0 ? Colors[palette.Value % Colors.Length] : materials[index].GetColor(BaseColor);
+                    Color color = index == 0 ? LobbyPlayerColors.Get(palette.Value) : materials[index].GetColor(BaseColor);
                     if (index == 0 && renderer is MeshRenderer) color = Color.Lerp(color, Color.white, 0.35f);
                     properties.SetColor(BaseColor, color);
                     if (index == 0 && renderer is SkinnedMeshRenderer && materials[index].HasProperty("_EmissionColor"))

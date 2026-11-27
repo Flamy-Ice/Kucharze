@@ -68,6 +68,8 @@ namespace ModularMovement
         {
             if (instance != null && instance != this) { Destroy(gameObject); return; }
             instance = this;
+            // Leave the editor's folder so this service can survive scene changes on its own.
+            transform.SetParent(null, true);
             DontDestroyOnLoad(gameObject);
             defaultVSync = QualitySettings.vSyncCount > 0;
             defaultFullscreen = Screen.fullScreen;

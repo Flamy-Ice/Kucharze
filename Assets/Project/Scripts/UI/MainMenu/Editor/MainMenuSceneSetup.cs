@@ -166,6 +166,7 @@ public static class MainMenuSceneSetup
             events.firstSelectedGameObject = optionsButton.gameObject;
             controller.ShowHome();
             MainMenuPresentationSetup.ApplyToScene(scene);
+            MainMenuNicknameSetup.ApplyToScene(scene);
             if (!EditorSceneManager.SaveScene(scene, ScenePath)) throw new IOException("Could not save the main menu scene.");
             var scenes = EditorBuildSettings.scenes.Where(item => item.path != ScenePath).ToList();
             scenes.Insert(0, new EditorBuildSettingsScene(ScenePath, true));

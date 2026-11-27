@@ -426,3 +426,59 @@ Usunięto readonly inicjalizator MaterialPropertyBlock. Widok tworzy ten obiekt 
 Pełna Assembly-CSharp skompilowana Roslynem z Unity 6000.6.3f1: PASS, kod wyjścia 0. Wyjścia i kopię rsp skierowano do własnego katalogu tymczasowego; usunięto go po kontroli. Kontrola kodu potwierdziła inicjalizację przed Clear oraz zwarciowe sprawdzenia tablic przed odczytem Length. Uzupełniono specyfikację Networking/README.md. git diff --check dla zmienionego skryptu i dokumentacji: bez błędów, poza standardowymi ostrzeżeniami LF/CRLF.
 
 Nie uruchamiano Unity ani Play Mode i nie deklaruje się wykonanego testu runtime. Przyczynę potwierdzono logiem silnika, a poprawkę kompilacją i przeglądem cyklu inicjalizacji. Następny krok użytkownika: zatrzymać Play Mode, Assets > Refresh, poczekać na kompilację, wyczyścić stare wpisy Console i uruchomić scenę przez Main Menu. Nie trzeba zmieniać referencji w Inspectorze. Nie używano Computer Use ani nie tworzono trwałych plików testowych.
+
+## 2026-11-26 — importer metadata compatibility
+
+Updated LiberationSans.ttf.meta to TrueTypeFontImporter serializedVersion 4, added externalObjects and removed the obsolete use2xBehaviour field. Preserved its GUID and existing font settings. Added the missing ScriptedImporter block to PlayerAudioClipList.uss.meta with serializedVersion 2 and Unity's built-in stylesheet importer reference; preserved its GUID. Compared the importer structures with font metadata in Project/Shared/UI/Fonts/Sources and stylesheet metadata in Library/PackageCache. No gameplay code or source assets changed.
+
+Validation: confirmed both original GUIDs and required importer versions in the resulting files. Targeted git diff --check passed (only the standard LF/CRLF warning). Unity reimport and Play Mode were not run for this task; disappearance of the warnings in the editor remains unverified. Use Assets > Refresh to import the updated metadata.
+
+
+## 2026-11-26 — zwarte lobby inspirowane PlateUp
+
+Przebudowano i zapisano Lobby.unity przez działający edytor Unity, bez Computer Use. Budynek ma około 20 × 14 m: cztery osobne pokoje respawnu w tylnym rzędzie, wspólna sala bez korytarza, dziewięć pól poziomów w trzech grupach przy trzech ścianach oraz centralna strefa gotowości. Zmieniono kamerę (X=45°, FOV=25°), obniżono przednie ściany i dopasowano kadr. Konfiguracja poziomów, identyfikatory i referencje stref pozostają zachowane; mechanika serwera nadal wymaga 2–4 graczy i pięciu sekund ciągłej obecności wszystkich w strefie po wyborze poziomu przez hosta.
+
+PASS: kompilacja skryptów w Unity i końcowa operacja rebuild. Wykonano ValidateScene i ValidateCompactLayout przed zapisem: cztery spawny bez kolizji, brak brakujących skryptów, poprawne granice startu, dziewięć rozłącznych centrów stref wyboru poza strefą startu oraz kontrola kapsułą wejść z czterech pokojów i obu przejść bocznych. Wygenerowano i obejrzano render URP 1280 × 720; po kontroli zmniejszono napis gotowości i ponownie wygenerowano oraz obejrzano render. Sprawdzono kod istniejącego LobbySession (minimum 2, maksimum 4, readySeconds=5) bez zmian w mechanice. Nie uruchamiano Play Mode ani testu sieciowego z 2–4 klientami; zachowania sieciowego nie potwierdzono nowym testem. Usunięto roboczy raport, render i ich pliki meta.
+
+
+## 2026-11-26 — natychmiastowy wybór i dziewięć dostępnych pól
+
+Ustawiono Selection Hold = 0 s i umożliwiono wybór już podczas pierwszego sprawdzenia wejścia hosta na pole. Zachowano obsługę opcjonalnego dodatniego czasu oraz ograniczenie wyboru do hosta. Wszystkie dziewięć slotów LobbySession wskazuje tymczasowo istniejącą scenę Kuba, a generator nowych konfiguracji stosuje tę samą zasadę. Poprawiono podpowiedź na STEP ON A PAD TO SELECT. Minimum dwóch graczy i pięć sekund wspólnej gotowości nie zostały zmienione.
+
+PASS: statyczna kontrola dziewięciu przypisań sceny, Selection Hold = 0, readySeconds = 5 i ścieżki wyboru bez dodatkowej klatki oczekiwania; git diff --check dla zmienionych komponentów i prefabu. Nie wykonano testu Play Mode ani sieciowego.
+
+
+## 2026-11-26 — porządkowanie Hierarchy Main Menu
+
+Zmieniono wyłącznie organizację zapisanej sceny Main Menu przez dodanie 14 pustych grup, bez nowych skryptów. PASS: automatyczne porównanie YAML przed i po zachowało wszystkie 123 oryginalne GameObjecty oraz komplet komponentów; wszystkie pola istniejących komponentów i transformów pozostały identyczne poza listami dzieci i rodzicami. Sprawdzono identyczną spłaszczoną kolejność rysowania UI, spójność rodzic–dziecko i zachowanie trzech usług DontDestroyOnLoad na poziomie root. Grupy UI mają neutralne, rozciągnięte RectTransformy; nie dodano Canvasów, grafiki ani komponentów układu. git diff --check sceny: PASS. Nie uruchamiano Unity ani Play Mode dla tej zmiany; nie wykonywano porównania renderów.
+
+
+## 2026-11-26 — domknięcie porządkowania usług Main Menu
+
+Po uwadze użytkownika zgrupowano trzy pozostałe usługi w pustym PersistentServices. Scena ma teraz trzy główne foldery: SceneSystems, UI i PersistentServices. MenuAudioSettings, MenuUISounds i MenuVideoSettings odłączają się od rodzica przed własnym DontDestroyOnLoad, aby nadal przetrwały zmianę sceny niezależnie. Obsługa duplikatów pozostaje przed tą operacją. PASS: porównanie YAML potwierdziło zmianę wyłącznie trzech rodziców i listy rootów oraz dodanie pustego folderu; całe istniejące UI i ustawienia komponentów są identyczne jak przed tą poprawką. Sprawdzono kolejność SetParent(null, true) przed DontDestroyOnLoad w trzech usługach. Nie uruchamiano Unity ani Play Mode dla tej poprawki.
+
+
+## 2026-11-26 — organizacja Hierarchy Lobby
+
+Dodano dziewięć pustych grup: cztery foldery główne SceneSystems, Environment, Gameplay i UI oraz Architecture, PlayerRooms i trzy grupy pól poziomów. Zachowano 380 istniejących GameObjectów. PASS: porównanie YAML potwierdziło brak zmian wszystkich istniejących komponentów i właściwości transformów poza rodzicami oraz listami dzieci. Prefab kamery zachował wszystkie nadpisania, zmieniono wyłącznie jego rodzica i dodano wymaganą referencję stripped Transform. Sprawdzono spójność relacji rodzic–dziecko. Runtime LobbySession nadal wyszukuje LobbyLayout i LobbyLevelZones rekurencyjnie. Zaktualizowano wyszukiwanie oraz wywołania organizowania w generatorach edytora, aby wspierały foldery. git diff --check: PASS. Nie uruchamiano Unity, renderu ani Play Mode dla tej zmiany; kompilacji nowego pomocnika edytora nie potwierdzono w Unity.
+
+
+## 2026-11-26 — nick gracza: przygotowanie i kompilacja
+
+Dodano lokalny profil nicku, pole MenuPlayerNickname, walidację Host/Join, osobny serwerowy adapter LobbyPlayerNickname i widok LobbyPlayerNameplate. MainMenuNicknameSetup przygotowuje pole w istniejącym PlayCard i etykietę na LobbyPlayer bez przebudowy menu ani lobby. Zakres: 2–16 znaków, zapis lokalny, odtworzenie przy powrocie, RPC wyłącznie właściciela z ponowną walidacją serwera, replikacja do wszystkich klientów oraz podpis widoczny tylko w Lobby.
+
+PASS: kompilacja runtime i edytora kompilatorem Roslyn dostarczonym z Unity 6000.6.3f1, z rzeczywistymi referencjami pakietów projektu; użyto tymczasowych odpowiedników response files, aktualizując przeniesione ścieżki źródeł i dodane pliki. Pierwsza kompilacja edytora wykryła zmianę API InputField.onEndEdit na EndEditEvent; poprawiono ją i ponowna kompilacja zakończyła się bez błędów. To nie zastępuje importu Unity, generowania RPC przez Netcode ani testów Play Mode. Sprawdzenie tabel cmap plików TTF potwierdziło brak polskich liter w Jua i obecność pełnego polskiego alfabetu w Madimi One; podpis używa osobnego fontu TMP tworzonego z Madimi One. git diff --check nowych komponentów: PASS. Automatyczna konfiguracja sceny i prefabu oraz render czekają na import skryptów w otwartym Unity przez Ctrl+R. Nie wykonano testu multiplayer.
+
+
+## 2026-11-27 — czytelny kod i właściciele pokojów
+
+Usunięto OnGUI z LobbyConnectionView (przycisk Leave). Przygotowano LobbyCodeDisplay.FormatCode z nagłówkiem 26 i kodem 80, ciemny panel 520 × 151, jasny tekst i osobny materiał fontu. LobbyPlayerColors jest wspólnym źródłem czterech nasyconych kolorów dla graczy i pokojów; podłogi mieszają 20% koloru kremowego zamiast wcześniejszych 55%. Nowe LobbyRoomOccupantSign odczytują replikowane PaletteIndex oraz Nickname i pokazują nick nad przypisanym pokojem, a dla wolnego slotu WAITING / FOR PLAYER. LobbyRoomSignsSetup aktualizuje istniejące materiały i tabliczki bez przebudowy geometrii i przygotowuje podgląd kodu oraz przykładowych krótkich, polskich i 16-znakowych nicków.
+
+PASS: kompilacja runtime oraz edytora kompilatorem Roslyn Unity 6000.6.3f1 z referencjami pakietów projektu; ponowna kompilacja edytora po poprawkach również bez błędów. git diff --check zmienionych komponentów: PASS. Obliczony kontrast sRGB kodu #FFF1B3 na tle #152734 wynosi 13.48:1. Nie zmieniano reguł gotowości, ruchu ani przydziału pokojów. Konfiguracja sceny i materiałów wykonana w otwartym Unity, raport SUCCESS. Wygenerowano i obejrzano render 1280 × 720 z kodem, polskim nickiem, nickiem 16-znakowym i wolnym pokojem. Pierwszy render wykrył niewłaściwy zapis pozycji czwartej tabliczki; poprawiono ustawianie anchoredPosition3D, ponownie skompilowano i wykonano konfigurację oraz render w Unity. Końcowy render i kontrola zapisanych czterech slotów/pozycji: PASS. Usunięto stare teksty ROOM 01–04. Nie uruchomiono Play Mode ani testu sieciowego nowych tabliczek. Poprzednia konfiguracja nicków z 2026-11-26 ma już raport SUCCESS, a aktualny screenshot użytkownika potwierdza wyświetlanie nicku nad graczem.
+
+Po kontroli usunięto roboczy raport, render i ich meta oraz tymczasowe pliki kompilacji.
+
+
+## 2026-11-27 — przywrócenie oryginalnego tła kodu
+
+Przywrócono w Lobby.unity oryginalny sprite clock-background.png (GUID de06e95ddf2264844a78a930f1ee7273, fileID 6411445137024503678), biały tint i rozmiar 400 × 151. Zachowano powiększony kod 80 i dopasowano jego kolor do jasnego tła (#152734). Poprawiono również LobbyUISetup, aby kolejne odświeżenia nie usuwały grafiki. PASS: kontrola zapisanej referencji sprite, rozmiaru i koloru oraz git diff --check. Obejrzano źródłową grafikę tła. Nie uruchamiano renderu sceny ani Play Mode dla tej poprawki.

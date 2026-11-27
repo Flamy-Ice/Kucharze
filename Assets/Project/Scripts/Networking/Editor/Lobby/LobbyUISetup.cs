@@ -25,6 +25,7 @@ public static class LobbyUISetup
             Ensure(scene);
             EditorSceneManager.MarkSceneDirty(scene);
             if (!EditorSceneManager.SaveScene(scene)) throw new InvalidOperationException("Could not save Lobby UI.");
+            AssetDatabase.SaveAssets();
         }
         finally { if (opened) EditorSceneManager.CloseScene(scene, true); }
     }
@@ -36,7 +37,7 @@ public static class LobbyUISetup
             .FirstOrDefault(item => item != null && (item.name == "READY ROOM" || item.GetComponent<LobbyReadinessSign>() != null));
         if (sign == null) throw new InvalidOperationException("The ready-room sign is missing.");
         sign.text = "READY ROOM\n0/0 READY\nHOST: SELECT A LEVEL";
-        sign.characterSize = 0.1f;
+        sign.characterSize = 0.075f;
         sign.lineSpacing = 1f;
         sign.anchor = TextAnchor.MiddleCenter;
         sign.alignment = TextAlignment.Center;
@@ -50,7 +51,14 @@ public static class LobbyUISetup
             plaque.position = new Vector3(plaquePosition.x, 1.4f, plaquePosition.z);
             plaque.localScale = new Vector3(6.6f, 1.6f, 0.12f);
         }
-        if (objects.Any(item => item.GetComponent<LobbyCodeDisplay>() != null)) return;
+        LobbyRoomSignsSetup.Ensure(scene);
+        LobbyCodeDisplay existing = objects.Where(item => item != null)
+            .Select(item => item.GetComponent<LobbyCodeDisplay>()).FirstOrDefault(item => item != null);
+        if (existing != null)
+        {
+            StyleCode(existing.GetComponent<TextMeshProUGUI>());
+            return;
+        }
 
         Sprite background = AssetDatabase.LoadAllAssetsAtPath("Assets/Project/Gameplay/UI/HUD/Panels/clock-background.png")
             .OfType<Sprite>().FirstOrDefault();
@@ -92,6 +100,35 @@ public static class LobbyUISetup
         var serialized = new SerializedObject(display);
         serialized.FindProperty("safeArea").objectReferenceValue = safe;
         serialized.ApplyModifiedPropertiesWithoutUndo();
+        StyleCode(label);
+    }
+
+    private static void StyleCode(TextMeshProUGUI label)
+    {
+        var panel = (RectTransform)label.transform.parent;
+        panel.sizeDelta = new Vector2(400, 151);
+        Image background = panel.GetComponent<Image>();
+        background.sprite = AssetDatabase.LoadAllAssetsAtPath("Assets/Project/Gameplay/UI/HUD/Panels/clock-background.png")
+            .OfType<Sprite>().First();
+        background.color = Color.white;
+        label.text = LobbyCodeDisplay.FormatCode("");
+        label.fontSize = 80;
+        label.enableAutoSizing = false;
+        label.color = new Color32(21, 39, 52, 255);
+        label.lineSpacing = -6;
+        label.rectTransform.offsetMin = new Vector2(16, 8);
+        label.rectTransform.offsetMax = new Vector2(-16, -8);
+        const string materialPath = "Assets/Project/Placeholders/Lobby/Materials/RoomColors/LobbyCode.mat";
+        Material material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
+        if (material == null)
+        {
+            material = new Material(label.font.material) { name = "LobbyCode" };
+            material.SetColor(ShaderUtilities.ID_FaceColor, Color.white);
+            material.DisableKeyword("UNDERLAY_ON");
+            material.DisableKeyword("UNDERLAY_INNER");
+            AssetDatabase.CreateAsset(material, materialPath);
+        }
+        label.fontSharedMaterial = material;
     }
 
     private static RectTransform Rect(string name, Transform parent)

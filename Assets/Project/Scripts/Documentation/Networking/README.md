@@ -4,9 +4,9 @@
 
 Docelowa gra jest wyłącznie wieloosobowa dla 2–4 graczy, licząc hosta. Host może czekać sam w lobby, ale nie może rozpocząć rozgrywki w pojedynkę. Działanie komponentów bez adapterów sieciowych pozostaje przydatne do testów i nie oznacza dostępnego trybu singleplayer.
 
-Lobby jest przestrzenią dla 2–4 graczy z czterema otwartymi pokojami: po dwa z lewej i prawej strony wspólnego korytarza. Przednia część holu ma mały salon, a po lewej znajduje się wspólne pomieszczenie wyboru poziomu i gotowości. Główna część ma około 22.8 × 15 m, a wspólne pomieszczenie 16 × 11 m. Spawny pozostają osobnymi znacznikami; każdy uczestnik dostaje pierwszy wolny pokój, może odwiedzać cudze pokoje i zachowuje przypisanie przy powrocie z rundy. Wyposażenie jest dekoracyjne i nie dodaje interakcji.
+Lobby jest zwartym budynkiem dla 2–4 graczy, z czterema małymi pokojami respawnu w tylnym rzędzie i jedną wspólną salą. Każdy pokój ma bezpośrednie wejście do sali (1.8 m), bez korytarza. Obrys ma około 20 × 14 m. Dziewięć pól wyboru stoi w trzech grupach po trzy: przy lewej, prawej i przedniej ścianie, z osobnym miejscem na ikonę nad każdym polem. Zielone pole startowe (5.8 × 3 m) znajduje się centralnie, oddzielone od wyboru poziomu. Spawny pozostają osobnymi znacznikami; każdy uczestnik dostaje swój pokój. Minimum dwóch graczy oraz pełne pięć sekund wspólnej gotowości pozostają bez zmian.
 
-Po porównaniu z referencjami użytkownik upoważnił również poprawę prefabu i całej oprawy. LobbyCamera.prefab używa teraz łagodnej perspektywy: kąt X = 45°, Y/Z = 0° i pionowe Field of View = 15°. LobbyCameraFraming dopasowuje odległość do stałych granic planszy i proporcji okna, zostawiając miejsce na HUD. Nie śledzi gracza ani nie obraca kamery podczas gry; po zmianie rozmiaru okna koryguje wyłącznie kadr. Jest to świadoma zmiana wcześniejszej kamery ortograficznej, zgodna z najnowszą zgodą użytkownika.
+Po porównaniu z referencjami użytkownik upoważnił również poprawę prefabu i całej oprawy. LobbyCamera.prefab używa teraz łagodnej perspektywy: kąt X = 45°, Y/Z = 0° i pionowe Field of View = 25°. LobbyCameraFraming dopasowuje odległość do stałych granic planszy i proporcji okna, zostawiając miejsce na HUD. Nie śledzi gracza ani nie obraca kamery podczas gry; po zmianie rozmiaru okna koryguje wyłącznie kadr. Jest to świadoma zmiana wcześniejszej kamery ortograficznej, zgodna z najnowszą zgodą użytkownika.
 
 Zielona strefa we wspólnym pomieszczeniu służy do rozpoczęcia gry: wszyscy obecni gracze muszą do niego wejść i pozostać w nim przez pełne 5 sekund. Przy czterech graczach obecność trzech w tym pomieszczeniu nie wystarcza. Wyjście choć jednej osoby ze strefy, dołączenie nowej osoby lub rozłączenie uczestnika zeruje odliczanie. Po zmianie składu sprawdzamy ponownie wszystkich aktualnych uczestników: jeśli jest ich co najmniej dwóch i wszyscy są w strefie, rozpoczyna się nowe pełne odliczanie. Jedna osoba nigdy nie uruchamia rozgrywki. Odliczanie wymaga wcześniejszego wyboru dostępnego poziomu przez hosta. Warunki i odliczanie rozstrzyga serwer.
 
@@ -235,7 +235,7 @@ Tabliczka ma rozmiar 6.6 × 1.6 m i środek na wysokości 1.4 m; napis pozostaje
 
 ## Pomieszczenie wyboru poziomu — dziewięć slotów
 
-Host wybiera poziom w tym samym zachodnim pomieszczeniu, w którym znajduje się zielona strefa wspólnego startu. Dziewięć pól leży w jednym rzędzie pod górną ścianą, poza drogą przez środek pokoju. Aby zatwierdzić wybór, host pozostaje na jednym polu przez domyślnie 0.65 s; wyjście z pola albo przejście na inne zeruje oczekiwanie. Inni gracze mogą oglądać pokój i wchodzić na pola, ale nie zmieniają wyboru. Przejście do pokoju startowego pozostaje otwarte. Przed wybraniem dostępnego poziomu gotowość jest widoczna, lecz odliczanie nie rusza. Wybranie innego poziomu zeruje odliczanie. Nadal potrzeba 2–4 graczy, wszystkich w pokoju startowym, przez pełne pięć sekund. Po powrocie z rozgrywki poprzedni wybór jest zachowany i host może go zmienić. Po utworzeniu nowej sesji nic nie jest wybrane.
+Host wybiera poziom w tym samym zachodnim pomieszczeniu, w którym znajduje się zielona strefa wspólnego startu. Dziewięć pól leży w jednym rzędzie pod górną ścianą, poza drogą przez środek pokoju. Wybór zatwierdza się natychmiast po wejściu hosta na pole (Selection Hold = 0 s). Opcjonalny dodatni czas można ustawić w Inspectorze. Inni gracze mogą oglądać pokój i wchodzić na pola, ale nie zmieniają wyboru. Przejście do pokoju startowego pozostaje otwarte. Przed wybraniem dostępnego poziomu gotowość jest widoczna, lecz odliczanie nie rusza. Wybranie innego poziomu zeruje odliczanie. Nadal potrzeba 2–4 graczy, wszystkich w pokoju startowym, przez pełne pięć sekund. Po powrocie z rozgrywki poprzedni wybór jest zachowany i host może go zmienić. Po utworzeniu nowej sesji nic nie jest wybrane.
 
 Pomieszczenie ma pojedynczy rząd dziewięciu ramek z ikonami nad polami. Pola są rozstawione co 1.6 m; strefa wyboru ma 1 × 0.75 m i znajduje się przy ścianie, a wspólna strefa startu pozostaje w środku. Między strefą startu a polami jest około 1.98 m wolnego przejścia. Znak ? jest placeholderem ikony. Szare pola z UNAVAILABLE nie mają sceny albo scena nie jest dostępna w buildzie. Dostępne pole ma zwykły kolor, a wybrane jest zielone i oznaczone SELECTED u wszystkich uczestników. Wejście na niedostępne pole nie kasuje wcześniejszego prawidłowego wyboru. Ikony i nazwy są konfigurowane w dziewięciu slotach prefabu sesji; każdy klient musi korzystać z tej samej wersji prefabu i scen.
 
@@ -250,9 +250,9 @@ Pomieszczenie ma pojedynczy rząd dziewięciu ramek z ikonami nad polami. Pola s
 ### Przypisanie dziewięciu scen i ikon
 
 1. W Project otwórz Assets > Project > Lobby > Prefabs > Networking i zaznacz LobbySession.prefab.
-2. W Inspector rozwiń Lobby Level Selection. Selection Hold (s) ustala czas celowego pozostania na polu; domyślnie wynosi 0.65 s. Dla każdego Level 1–9 ustaw Title, przeciągnij właściwy plik sceny .unity do Gameplay Scene i opcjonalnie grafikę typu Sprite do Icon. Puste Icon pokazuje ? i nie blokuje wyboru. Puste Gameplay Scene blokuje ten slot.
+2. W Inspector rozwiń Lobby Level Selection. Selection Hold (s) ustala czas celowego pozostania na polu; domyślnie wynosi 0 s (wybór natychmiastowy). Dla każdego Level 1–9 ustaw Title, przeciągnij właściwy plik sceny .unity do Gameplay Scene i opcjonalnie grafikę typu Sprite do Icon. Puste Icon pokazuje ? i nie blokuje wyboru. Puste Gameplay Scene blokuje ten slot.
 3. Otwórz File > Build Profiles > Open Scene List. Dodaj i włącz każdą rzeczywiście używaną scenę poziomu. Main Menu pozostaje pierwszą sceną, Lobby pozostaje na liście, a sceny zgodnie z regułą projektu należą bezpośrednio do Assets/Project/Scenes/Debug/Kuba. Poziom wymaga gotowego przepływu sieciowej rozgrywki i LobbyLayout z czterema punktami wejścia, tak jak obecna Kuba. Samo przypisanie pustej sceny nie implementuje poziomu.
-4. W obecnym projekcie przypisano tylko Level 1 do Kuba. Pozostałych ośmiu scen nie utworzono i nie przypisano do prac innych członków zespołu. Po ich dostarczeniu uzupełnij odpowiednie sloty. Nie powielono Kuba dziewięć razy i żaden niedostępny slot nie przenosi do innej sceny zastępczej.
+4. Wszystkie dziewięć slotów jest odblokowanych i tymczasowo wskazuje tę samą istniejącą scenę Kuba. Po dostarczeniu oddzielnych poziomów zastąp ich Gameplay Scene we właściwych slotach. Nie utworzono dziewięciu kopii sceny.
 5. Przebuduj grę dla wszystkich uczestników. Dodano nowy NetworkBehaviour do tego samego NetworkObject sesji; starsze buildy nie są zgodne z nową konfiguracją. Zwykły build rozpoczynający się w Main Menu korzysta z włączonych scen profilu. Historyczne Build Lobby Test obejmuje tylko Lobby i Kuba i pozostaje technicznym testem początkowego Level 1, a nie buildem wszystkich przyszłych poziomów.
 
 ### Odpowiedzialności i kontrola
@@ -265,3 +265,35 @@ Uzupełniono istniejący LobbySmokeProbe o blokadę startu bez wyboru, odrzuceni
 ### Wysokości ścian i perspektywa wspólnego pokoju
 
 Górne i boczne ściany są wysokie; przednia pozostaje niska (około 0.7 m), aby widok perspektywiczny pokazywał wnętrze. W zapisanej scenie zachowano autorskie wysokości i nakładki głównej górnej oraz bocznej ściany. Nowe ściany i odcinki przy wejściu dopasowują swój górny brzeg do istniejącej zabudowy (około 4.5–4.6 m). Pełne Refresh Lobby Appearance zachowuje zastane transformaty tych ścian, ich nakładek i listew, a także bieżący FOV i obrót kamery. Aktualna scena ma FOV=45°; nie zastąpiono go wcześniejszym domyślnym FOV=15°. Board Bounds jest wyliczane z całej geometrii obu części i uwzględnia wysokie ściany. Nie dodano śledzenia gracza ani obrotu kamery w grze.
+
+
+### Zwarty układ lobby — 2026-11-26
+
+Aktualny układ zastępuje wcześniejszą dobudówkę, korytarz i rozległy hol opisane historycznie powyżej. Rebuild Lobby Room Layout odtwarza zwarty budynek, przenosi cztery istniejące znaczniki respawnu i strefę startu, zachowując referencje dziewięciu pól oraz konfigurację poziomów w LobbySession. Nie zmienia prefabu gracza. Kamera ma X=45°, FOV=25° i automatyczny kadr całego budynku. Tylna ściana ma 2.8 m, boczne 1 m, przednia 0.55 m; przegrody i fronty pokojów są obniżone dla czytelnego widoku wnętrz. Ikony mają pochylone ramki, zgodnie z kierunkiem widoku. Nie utworzono brakujących poziomów ani ikon.
+
+
+### Natychmiastowy wybór i odblokowane pola — 2026-11-26
+
+Na prośbę użytkownika wszystkie dziewięć pól wskazuje teraz istniejącą scenę Kuba. Wybór hosta następuje przy pierwszym sprawdzeniu jego pozycji na polu (bez domyślnego czasu potwierdzenia i bez dodatkowej klatki oczekiwania). Kolor jest aktualizowany przez istniejący widok po otrzymaniu wyboru z serwera. Minimum dwóch graczy i pięć sekund wspólnej gotowości pozostają bez zmian.
+
+
+### Hierarchy Lobby — 2026-11-26
+
+Scena ma cztery główne puste foldery: SceneSystems (LobbyCamera, LobbyLight, LobbyEntry), Environment (LobbyPresentation), Gameplay (LobbyMarkers, StartZone_MoveAndResizeMe, LobbyLevelRoom) i UI (LobbyHUD). LobbyPresentation grupuje Architecture, PlayerRooms i ReadyRoomDecor; LobbyLevelRoom zawiera LeftWallLevels, RightWallLevels oraz FrontWallLevels, po trzy poziomy w każdej grupie. Nowe grupy mają jednostkowe transformaty i nie zmieniają geometrii ani ustawień komponentów. Kamera zachowuje połączenie z prefabem. LobbyHierarchySetup odtwarza tę organizację w narzędziach edytora; wyszukiwanie obiektów w generatorach obejmuje zagnieżdżone grupy. Historyczne ścieżki rootów opisane powyżej należy odczytywać z tymi nowymi folderami.
+
+
+### Nicki graczy — 2026-11-26
+
+Przed Host/Join gracz wprowadza nick na ekranie Play w Main Menu. LobbyPlayerNickname przesyła zapamiętany nick z urządzenia właściciela przez RPC Owner do serwera, który ponownie normalizuje tekst i dopuszcza jedno poprawne zgłoszenie na spawn. Replikowana NetworkVariable<FixedString64Bytes> jest zapisywana wyłącznie przez serwer i obejmuje również później dołączających klientów. Ograniczenie do 16 znaków BMP bez sterujących i surrogate mieści nick w buforze UTF-8. Ruch i przypisanie pokojów nie zależą od nicku. Brak nicku przy bezpośrednim uruchomieniu narzędzi testowych daje Player N. Etykieta nad postacią jest widoczna tylko w Lobby. Zmieniono prefab gracza, więc stare i nowe buildy nie są zgodne; przebuduj grę dla wszystkich uczestników.
+
+
+### Czytelność i właściciele pokojów — 2026-11-27
+
+Usunięto przycisk IMGUI Leave z LobbyConnectionView. Panel kodu ma ciemne, nieprzezroczyste tło oraz jasnożółty kod o rozmiarze 80; ma szerokość 520 i wysokość 151 przy referencji 1920 × 1080. Wyłączono automatyczne zmniejszanie tekstu i zastąpiono materiał fontu własnym LobbyCode, aby kolor współdzielonego materiału nie przyciemniał napisu. Nagłówek ma 26 punktów.
+
+Wspólna LobbyPlayerColors definiuje nasycone kolory niebieski, czerwony, fioletowy i żółty; te same wartości trafiają do akcentów pokojów oraz płaszczy i pierścieni graczy. Podłogi mają tylko 20% domieszki kremowego koloru, dzięki czemu pokoje można łatwo odróżnić. Tabliczki RoomOccupantName korzystają z fontu NicknameFont z polskimi literami. LobbyRoomOccupantSign odczytuje replikowany PaletteIndex jako przypisany slot pokoju oraz LobbyPlayerNickname: pokazuje nick nad przypisanym pokojem niezależnie od aktualnej pozycji gracza. Wolne pokoje pokazują WAITING / FOR PLAYER, a podłączający się gracz może przejściowo pokazać JOINING.... Widok nie zmienia przydziału pokojów ani stanu sieciowego. Refresh Lobby UI aktualizuje istniejące tabliczki, materiały i panel bez przebudowy geometrii. Te ustalenia zastępują wcześniejszy opis panelu timera i przycisku Leave.
+
+
+### Przywrócenie grafiki panelu kodu — 2026-11-27
+
+Na prośbę użytkownika przywrócono oryginalne clock-background.png, biały tint i rozmiar panelu 400 × 151. Zastępuje to wcześniejszą zmianę tła na ciemny prostokąt. Kod nadal ma rozmiar 80 i własny materiał fontu; jego kolor jest teraz ciemnogranatowy #152734, dopasowany do jasnej części oryginalnej grafiki. Generator Refresh Lobby UI zachowuje tę grafikę. Nie podmieniać dostarczonego tła panelu przy kolejnych poprawkach czytelności kodu.

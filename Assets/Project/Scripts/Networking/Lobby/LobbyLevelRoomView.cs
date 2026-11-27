@@ -59,7 +59,7 @@ namespace ModularMovement
             {
                 string status = selection != null && selection.HasSelection
                     ? "SELECTED: " + selection.GetTitle(selection.SelectedIndex) + "\nMEET ON THE GREEN FLOOR"
-                    : "HOST: SELECT A LEVEL\nSTAY ON A PAD TO CONFIRM";
+                    : "HOST: SELECT A LEVEL\nSTEP ON A PAD TO SELECT";
                 if (statusLabel.text != status) statusLabel.text = status;
             }
         }

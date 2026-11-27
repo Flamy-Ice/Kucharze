@@ -16,6 +16,7 @@ namespace ModularMovement
         [SerializeField] private Button cancelButton;
         [SerializeField] private InputField joinCode;
         [SerializeField] private Text statusLabel;
+        [SerializeField] private MenuPlayerNickname nickname;
         private RelayConnection connection;
         private NetworkManager manager;
 
@@ -32,12 +33,12 @@ namespace ModularMovement
 
         public void Host()
         {
-            if (connection != null) connection.HostInScene(lobbyScene);
+            if (connection != null && nickname != null && nickname.TryCommit()) connection.HostInScene(lobbyScene);
         }
 
         public void Join()
         {
-            if (connection != null) connection.Join(joinCode.text);
+            if (connection != null && nickname != null && nickname.TryCommit()) connection.Join(joinCode.text);
         }
 
         public void Cancel()
@@ -49,11 +50,14 @@ namespace ModularMovement
         {
             bool available = connection != null && !connection.IsBusy && !connection.IsListening
                 && manager != null && !manager.ShutdownInProgress;
-            hostButton.interactable = available;
-            joinButton.interactable = available && !string.IsNullOrWhiteSpace(joinCode.text);
+            bool hasNickname = nickname != null && nickname.HasValidNickname;
+            hostButton.interactable = available && hasNickname;
+            joinButton.interactable = available && hasNickname && !string.IsNullOrWhiteSpace(joinCode.text);
             joinCode.interactable = available;
+            if (nickname != null) nickname.SetEditable(available);
             cancelButton.gameObject.SetActive(connection != null && connection.IsBusy);
-            statusLabel.text = connection != null ? connection.Status : "Online connection is unavailable.";
+            statusLabel.text = available && !hasNickname ? "Enter your nickname (2-16 characters) to host or join."
+                : connection != null ? connection.Status : "Online connection is unavailable.";
         }
     }
 }

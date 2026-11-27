@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace ModularMovement
 {
-    // Confirms a pad only after the host has stayed on it for a short time.
+    // Selects the host's pad immediately unless an optional hold time is configured.
     internal sealed class LobbyHostLevelSelector
     {
         private int candidate = -1;
@@ -26,7 +26,7 @@ namespace ModularMovement
             {
                 candidate = index;
                 heldSeconds = 0;
-                return false;
+                if (selection.SelectionHoldSeconds > 0) return false;
             }
             heldSeconds += Mathf.Max(0, deltaTime);
             if (heldSeconds < selection.SelectionHoldSeconds) return false;

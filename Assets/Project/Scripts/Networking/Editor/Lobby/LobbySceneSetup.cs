@@ -37,6 +37,11 @@ public static class LobbySceneSetup
             if (operation == "create") Create();
             else if (operation == "validate") Validate();
             else if (operation == "preview") Preview();
+            else if (operation == "rebuild")
+            {
+                LobbyPresentationBuilder.RebuildLayout();
+                Preview();
+            }
             else if (operation == "build")
             {
                 BuildLobbyTest();
@@ -153,10 +158,11 @@ public static class LobbySceneSetup
         zone.transform.position = LobbyLevelRoomBuilder.ReadyCenter;
         var box = zone.AddComponent<BoxCollider>();
         box.isTrigger = true;
-        box.size = new Vector3(6.4f, 5, 4.6f);
+        box.size = new Vector3(5.8f, 4, 3);
         AddLayout("LobbyMarkers", positions, box);
         var entry = new GameObject("LobbyEntry").AddComponent<LobbyEntry>();
         SetReference(entry, "connectionPrefab", connectionPrefab);
+        LobbyHierarchySetup.Organize(SceneManager.GetActiveScene());
     }
     private static void AddLayout(string name, Vector3[] positions, BoxCollider zone)
     {
@@ -205,7 +211,9 @@ public static class LobbySceneSetup
     private static void Preview()
     {
         Scene previous = SceneManager.GetActiveScene();
-        Scene scene = EditorSceneManager.OpenScene(LobbyPath, OpenSceneMode.Additive);
+        Scene scene = SceneManager.GetSceneByPath(LobbyPath);
+        bool opened = !scene.IsValid() || !scene.isLoaded;
+        if (opened) scene = EditorSceneManager.OpenScene(LobbyPath, OpenSceneMode.Additive);
         GameObject[] otherRoots = Enumerable.Range(0, SceneManager.sceneCount)
             .Select(SceneManager.GetSceneAt).Where(loaded => loaded != scene)
             .SelectMany(loaded => loaded.GetRootGameObjects()).Where(root => root.activeSelf).ToArray();
@@ -218,6 +226,8 @@ public static class LobbySceneSetup
             foreach (GameObject root in otherRoots) root.SetActive(false);
             Camera camera = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<Camera>()).Single();
             camera.targetTexture = target;
+            camera.aspect = 1280f / 720;
+            camera.GetComponent<LobbyCameraFraming>().FrameNow();
             var request = new UniversalRenderPipeline.SingleCameraRequest { destination = target };
             if (RenderPipeline.SupportsRenderRequest(camera, request)) RenderPipeline.SubmitRenderRequest(camera, request);
             else camera.Render();
@@ -226,6 +236,8 @@ public static class LobbySceneSetup
             texture.Apply();
             File.WriteAllBytes(Report + ".png", texture.EncodeToPNG());
             camera.targetTexture = null;
+            camera.ResetAspect();
+            camera.GetComponent<LobbyCameraFraming>().FrameNow();
         }
         finally
         {
@@ -234,7 +246,7 @@ public static class LobbySceneSetup
             UnityEngine.Object.DestroyImmediate(texture);
             UnityEngine.Object.DestroyImmediate(target);
             if (previous.IsValid()) SceneManager.SetActiveScene(previous);
-            EditorSceneManager.CloseScene(scene, true);
+            if (opened) EditorSceneManager.CloseScene(scene, true);
         }
     }
 

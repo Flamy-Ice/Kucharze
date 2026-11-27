@@ -19,12 +19,11 @@ public static class LobbyPresentationBuilder
     private static readonly Quaternion ViewRotation = Quaternion.Euler(45, 0, 0);
     private static readonly Color[] Accents =
     {
-        new Color(0.30f, 0.60f, 0.78f), new Color(0.88f, 0.45f, 0.32f),
-        new Color(0.60f, 0.46f, 0.74f), new Color(0.83f, 0.65f, 0.25f)
+        LobbyPlayerColors.Get(0), LobbyPlayerColors.Get(1), LobbyPlayerColors.Get(2), LobbyPlayerColors.Get(3)
     };
 
     public static Vector3 RoomSpawn(int index)
-        => new Vector3((index % 2 == 0 ? -7.4f : 7.4f) + 0.45f, 1.1f, index < 2 ? -4.75f : 4.75f);
+        => new Vector3(-7.5f + index * 5, 1.1f, 4.3f);
 
     public static void CreatePresentation()
     {
@@ -41,86 +40,59 @@ public static class LobbyPresentationBuilder
         Material dark = Material("Ink", new Color(0.16f, 0.21f, 0.22f));
         Material leaf = Material("Leaves", new Color(0.29f, 0.46f, 0.30f));
         Material pot = Material("Clay", new Color(0.64f, 0.34f, 0.23f));
-        Block("BuildingBase", new Vector3(0, -0.35f, 0), new Vector3(23.2f, 0.7f, 15.6f), foundation, art, true);
-        Block("LobbyFloor", new Vector3(0, 0.015f, 0), new Vector3(22.8f, 0.03f, 15), grout, art);
+        Block("BuildingBase", new Vector3(0, -0.35f, 0), new Vector3(20.4f, 0.7f, 14.4f), foundation, art, true);
+        Block("LobbyFloor", new Vector3(0, 0.015f, 0), new Vector3(20, 0.03f, 14), grout, art);
         Material[] tiles = { Material("TileA", new Color(0.68f, 0.71f, 0.64f)), Material("TileB", new Color(0.66f, 0.69f, 0.62f)) };
-        var corridor = new GameObject("CorridorTiles").transform;
-        corridor.SetParent(art);
-        for (int x = 0; x < 12; x++)
-            for (int z = 0; z < 8; z++)
-                Block("Tile", new Vector3(-10.45f + x * 1.9f, 0.04f, -6.5625f + z * 1.875f), new Vector3(1.888f, 0.025f, 1.863f), tiles[(x + z) % 2], corridor);
-        Wall("NorthWall", new Vector3(0, 0, 7.5f), 23, 4.6f, false, wall, cap, trim, art);
-        Wall("SouthWall", new Vector3(0, 0, -7.5f), 23, 0.72f, false, wall, cap, trim, art);
-        Wall("WestWall", new Vector3(-11.4f, 0, 0), 15, 4.6f, true, wall, cap, trim, art);
-        Wall("EastWall", new Vector3(11.4f, 0, 0), 15, 4.6f, true, wall, cap, trim, art);
-        Material[] planks = { Material("PlankA", new Color(0.58f, 0.40f, 0.25f)), Material("PlankB", new Color(0.60f, 0.42f, 0.27f)), Material("PlankC", new Color(0.56f, 0.38f, 0.24f)) };
+        var hall = new GameObject("SharedHallTiles").transform;
+        hall.SetParent(art);
+        for (int x = 0; x < 20; x++)
+            for (int z = 0; z < 10; z++)
+                Block("Tile", new Vector3(-9.5f + x, 0.04f, -6.5f + z * 0.97f), new Vector3(0.985f, 0.025f, 0.955f), tiles[(x + z) % 2], hall);
+        Wall("NorthWall", new Vector3(0, 0, 7), 20, 2.8f, false, wall, cap, trim, art);
+        Wall("SouthWall", new Vector3(0, 0, -7), 20, 0.55f, false, wall, cap, trim, art);
+        Wall("WestWall", new Vector3(-10, 0, 0), 14, 1.0f, true, wall, cap, trim, art);
+        Wall("EastWall", new Vector3(10, 0, 0), 14, 1.0f, true, wall, cap, trim, art);
         for (int index = 0; index < 4; index++)
         {
-            float x = index % 2 == 0 ? -7.4f : 7.4f;
-            float z = index < 2 ? -4.75f : 4.75f;
-            float side = Mathf.Sign(x);
+            float x = -7.5f + index * 5;
             var room = new GameObject("Room_" + (index + 1) + "_Decor").transform;
             room.SetParent(art);
             Material accent = Material("Player" + (index + 1), Accents[index]);
-            Material pale = Material("Player" + (index + 1) + "Pale", Color.Lerp(Accents[index], cream.color, 0.55f));
-            for (int row = 0; row < 11; row++)
-                Block("Floorboard", new Vector3(x, 0.045f, z - 2.45f + row * 0.49f), new Vector3(7.5f, 0.03f, 0.475f), planks[(row + index) % 3], room);
-            float innerX = side * 3.5f;
-            float doorZ = index < 2 ? -2 : 2;
-            Wall("RoomSide", new Vector3(innerX, 0, z), 5.5f, 1.1f, true, wall, cap, trim, room);
-            Wall("DoorLeft", new Vector3(x - 2.55f, 0, doorZ), 2.7f, 1.0f, false, wall, cap, trim, room);
-            Wall("DoorRight", new Vector3(x + 2.55f, 0, doorZ), 2.7f, 1.0f, false, wall, cap, trim, room);
-            Block("Doorstep", new Vector3(x, 0.065f, doorZ), new Vector3(2.4f, 0.035f, 0.45f), accent, room);
-            Block("RugBorder", new Vector3(x + 0.45f, 0.075f, z), new Vector3(2.7f, 0.035f, 3.1f), pale, room);
-            Block("Rug", new Vector3(x + 0.45f, 0.097f, z), new Vector3(2.48f, 0.015f, 2.88f), accent, room);
-            for (int stripe = 0; stripe < 2; stripe++)
-                Block("RugStripe", new Vector3(x + 0.45f, 0.11f, z - 1.0f + stripe * 2.0f), new Vector3(2.35f, 0.008f, 0.05f), pale, room);
-            float bedX = x + side * 2.35f;
-            Block("BedFrame", new Vector3(bedX, 0.28f, z - 0.7f), new Vector3(1.65f, 0.43f, 2.9f), wood, room, true);
-            Block("Mattress", new Vector3(bedX, 0.56f, z - 0.7f), new Vector3(1.49f, 0.24f, 2.65f), cream, room);
-            Block("Blanket", new Vector3(bedX, 0.72f, z - 1.05f), new Vector3(1.53f, 0.10f, 1.9f), pale, room);
-            Block("BlanketFold", new Vector3(bedX, 0.79f, z - 0.2f), new Vector3(1.54f, 0.07f, 0.22f), accent, room);
-            Block("Pillow", new Vector3(bedX, 0.76f, z + 0.15f), new Vector3(1.12f, 0.20f, 0.55f), cream, room);
-            Block("Headboard", new Vector3(bedX, 0.62f, z + 0.75f), new Vector3(1.75f, 1.12f, 0.16f), wood, room);
-            float tableX = x - side * 2.35f;
-            Block("BedsideTable", new Vector3(tableX, 0.42f, z - 1.9f), new Vector3(1.05f, 0.72f, 0.90f), wood, room, true);
-            Block("TableTop", new Vector3(tableX, 0.81f, z - 1.9f), new Vector3(1.15f, 0.08f, 1.0f), cream, room);
-            Block("Book", new Vector3(tableX, 0.89f, z - 1.9f), new Vector3(0.5f, 0.08f, 0.4f), accent, room);
-            Plant(new Vector3(x - side * 2.5f, 0.08f, z + 2.0f), pot, leaf, room);
-            Sign("ROOM " + (index + 1).ToString("00"), new Vector3(x + side * 2.35f, 0.73f, doorZ - 0.14f), new Vector2(2.3f, 0.52f), dark, cream.color, room, 0.078f);
+            Material pale = Material("Player" + (index + 1) + "Pale", Color.Lerp(Accents[index], cream.color, 0.20f));
+            Block("RoomFloor", new Vector3(x, 0.065f, 4.9f), new Vector3(4.85f, 0.04f, 4.05f), pale, room);
+            if (index < 3)
+                Wall("RoomDivider", new Vector3(x + 2.5f, 0, 4.9f), 4.2f, 1.3f, true, wall, cap, trim, room);
+            // Each room opens directly into the shared hall through a 1.8 m doorway.
+            Wall("DoorLeft", new Vector3(x - 1.7f, 0, 2.8f), 1.6f, 0.65f, false, wall, cap, trim, room);
+            Wall("DoorRight", new Vector3(x + 1.7f, 0, 2.8f), 1.6f, 0.65f, false, wall, cap, trim, room);
+            Block("Doorstep", new Vector3(x, 0.085f, 2.8f), new Vector3(1.8f, 0.04f, 0.45f), accent, room);
+            Block("SpawnRug", new Vector3(x, 0.10f, 4.3f), new Vector3(1.7f, 0.035f, 1.8f), accent, room);
+            Block("BedFrame", new Vector3(x + 1.3f, 0.25f, 5.65f), new Vector3(1.35f, 0.4f, 2.1f), wood, room, true);
+            Block("Mattress", new Vector3(x + 1.3f, 0.53f, 5.65f), new Vector3(1.25f, 0.2f, 2), cream, room);
+            Block("Blanket", new Vector3(x + 1.3f, 0.66f, 5.35f), new Vector3(1.28f, 0.08f, 1.35f), accent, room);
+            Block("Pillow", new Vector3(x + 1.3f, 0.7f, 6.25f), new Vector3(0.95f, 0.15f, 0.4f), cream, room);
+            Sign("ROOM " + (index + 1).ToString("00"), new Vector3(x, 1.7f, 6.8f), new Vector2(2.2f, 0.6f), dark, cream.color, room, 0.08f);
         }
         var readyRoom = new GameObject("ReadyRoomDecor").transform;
         readyRoom.SetParent(art);
         Material green = Material("ReadyGreen", new Color(0.42f, 0.62f, 0.48f));
         Material mint = Material("ReadyMint", new Color(0.76f, 0.84f, 0.66f));
-        Block("StartFloorBorder", new Vector3(0, 0.04f, 4.85f), new Vector3(6.8f, 0.04f, 5.1f), cream, readyRoom);
-        Block("StartFloor", new Vector3(0, 0.075f, 4.85f), new Vector3(6.55f, 0.025f, 4.85f), green, readyRoom);
+        Block("StartFloorBorder", new Vector3(0, 0.075f, -1), new Vector3(6.1f, 0.04f, 3.3f), cream, readyRoom);
+        Block("StartFloor", new Vector3(0, 0.105f, -1), new Vector3(5.8f, 0.025f, 3), green, readyRoom);
         for (int index = 0; index < 4; index++)
         {
-            Vector3 spot = new Vector3(-2.1f + index * 1.4f, 0.10f, 4.8f);
+            Vector3 spot = new Vector3(-2.1f + index * 1.4f, 0.13f, -1);
             Primitive("ReadySpotBorder", PrimitiveType.Cylinder, spot, new Vector3(1.05f, 0.008f, 1.05f), mint, readyRoom);
-            Primitive("ReadySpot", PrimitiveType.Cylinder, spot + Vector3.up * 0.01f, new Vector3(0.86f, 0.008f, 0.86f), green, readyRoom);
+            Primitive("ReadySpot", PrimitiveType.Cylinder, spot + Vector3.up * 0.02f, new Vector3(0.86f, 0.008f, 0.86f), green, readyRoom);
         }
-        Sign("READY ROOM", new Vector3(0, 1.1f, 7.32f), new Vector2(5.3f, 0.85f), wood, cream.color, readyRoom, 0.13f);
-        for (int step = 0; step < 3; step++)
-        {
-            GameObject left = Block("Wayfinding", new Vector3(-0.22f, 0.09f, -0.5f + step * 0.7f), new Vector3(0.62f, 0.025f, 0.12f), cream, art);
-            GameObject right = Block("Wayfinding", new Vector3(0.22f, 0.09f, -0.5f + step * 0.7f), new Vector3(0.62f, 0.025f, 0.12f), cream, art);
-            left.transform.rotation = Quaternion.Euler(0, -35, 0);
-            right.transform.rotation = Quaternion.Euler(0, 35, 0);
-        }
-        Bench(new Vector3(0, 0.08f, -6.3f), wood, cream, art);
-        Block("CoffeeTable", new Vector3(0, 0.47f, -3.8f), new Vector3(2.0f, 0.80f, 1.2f), wood, art, true);
-        Block("CoffeeTableTop", new Vector3(0, 0.91f, -3.8f), new Vector3(2.2f, 0.10f, 1.4f), cream, art);
-        Plant(new Vector3(-2.9f, 0.08f, -6.6f), pot, leaf, art);
-        Plant(new Vector3(2.9f, 0.08f, -6.6f), pot, leaf, art);
+        Sign("READY ROOM", new Vector3(0, 1.4f, 1.65f), new Vector2(6.6f, 1.6f), wood, cream.color, readyRoom, 0.1f);
         var cameraObject = new GameObject("LobbyCamera");
         Camera camera = cameraObject.AddComponent<Camera>();
         cameraObject.tag = "MainCamera";
         Vector3 target = new Vector3(0, 0.65f, 0);
         cameraObject.transform.SetPositionAndRotation(target - ViewRotation * Vector3.forward * 74, ViewRotation);
         camera.orthographic = false;
-        camera.fieldOfView = 15;
+        camera.fieldOfView = 25;
         camera.farClipPlane = 200;
         camera.clearFlags = CameraClearFlags.SolidColor;
         camera.backgroundColor = new Color(0.075f, 0.11f, 0.13f);
@@ -239,7 +211,7 @@ public static class LobbyPresentationBuilder
         {
             SceneManager.SetActiveScene(scene);
             // Keep authored wall heights and perspective while refreshing the generated room.
-            var wallAppearance = CaptureOuterWalls(scene);
+            var wallAppearance = reshapeLayout ? new Dictionary<string, (Vector3, Quaternion, Vector3)>() : CaptureOuterWalls(scene);
             Camera oldCamera = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<Camera>()).FirstOrDefault();
             float savedFieldOfView = oldCamera != null ? oldCamera.fieldOfView : 0;
             Quaternion savedRotation = oldCamera != null ? oldCamera.transform.rotation : ViewRotation;
@@ -248,13 +220,13 @@ public static class LobbyPresentationBuilder
                 ArtRoot, "Floor", "NorthWall", "SouthWall", "WestWall", "EastWall", "Room_1", "Room_2", "Room_3", "Room_4",
                 "StartFloor", "StartLeft", "StartRight", "START ROOM", "SHARED CORRIDOR", "PLAYER 1", "PLAYER 2", "PLAYER 3", "PLAYER 4", "LobbyCamera", "LobbyLight"
             };
-            foreach (GameObject root in scene.GetRootGameObjects())
-                if (oldNames.Contains(root.name)) UnityEngine.Object.DestroyImmediate(root);
+            foreach (Transform item in scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<Transform>(true)).ToArray())
+                if (item != null && oldNames.Contains(item.name)) UnityEngine.Object.DestroyImmediate(item.gameObject);
             CreatePresentation();
             RestoreOuterWalls(scene, wallAppearance);
-            if (savedFieldOfView > 0)
+            if (!reshapeLayout && savedFieldOfView > 0)
             {
-                Camera newCamera = scene.GetRootGameObjects().Single(root => root.name == "LobbyCamera").GetComponent<Camera>();
+                Camera newCamera = LobbyHierarchySetup.Find(scene, "LobbyCamera").GetComponent<Camera>();
                 newCamera.fieldOfView = savedFieldOfView;
                 newCamera.transform.rotation = savedRotation;
                 PrefabUtility.RecordPrefabInstancePropertyModifications(newCamera);
@@ -270,9 +242,12 @@ public static class LobbyPresentationBuilder
                     ((Transform)spawns.GetArrayElementAtIndex(index).objectReferenceValue).position = RoomSpawn(index);
                 var zone = (BoxCollider)settings.FindProperty("startZone").objectReferenceValue;
                 zone.transform.position = LobbyLevelRoomBuilder.ReadyCenter;
-                zone.size = new Vector3(6.4f, 5, 4.6f);
+                zone.size = new Vector3(5.8f, 4, 3);
             }
-            LobbyPlayerVisualSetup.Apply();
+            LobbyHierarchySetup.Organize(scene);
+            Physics.SyncTransforms();
+            ValidateScene(scene);
+            ValidateCompactLayout(scene);
             EditorSceneManager.SaveScene(scene);
             AssetDatabase.SaveAssets();
         }
@@ -286,12 +261,12 @@ public static class LobbyPresentationBuilder
     private static Dictionary<string, (Vector3 position, Quaternion rotation, Vector3 scale)> CaptureOuterWalls(Scene scene)
     {
         var result = new Dictionary<string, (Vector3, Quaternion, Vector3)>();
-        Transform scenery = scene.GetRootGameObjects().FirstOrDefault(root => root.name == ArtRoot)?.transform;
+        Transform scenery = LobbyHierarchySetup.Find(scene, ArtRoot);
         if (scenery == null) return result;
         foreach (string side in new[] { "NorthWall", "EastWall", "WestWall" })
             foreach (string suffix in new[] { "", "Cap", "Skirting" })
             {
-                Transform wall = scenery.Find(side + suffix);
+                Transform wall = LobbyHierarchySetup.Find(scenery, side + suffix);
                 if (wall != null) result[wall.name] = (wall.localPosition, wall.localRotation, wall.localScale);
             }
         return result;
@@ -299,10 +274,10 @@ public static class LobbyPresentationBuilder
 
     private static void RestoreOuterWalls(Scene scene, Dictionary<string, (Vector3 position, Quaternion rotation, Vector3 scale)> appearance)
     {
-        Transform scenery = scene.GetRootGameObjects().Single(root => root.name == ArtRoot).transform;
+        Transform scenery = LobbyHierarchySetup.Find(scene, ArtRoot);
         foreach (var entry in appearance)
         {
-            Transform wall = scenery.Find(entry.Key);
+            Transform wall = LobbyHierarchySetup.Find(scenery, entry.Key);
             if (wall == null) continue;
             wall.localPosition = entry.Value.position;
             wall.localRotation = entry.Value.rotation;
@@ -359,6 +334,34 @@ public static class LobbyPresentationBuilder
         UnityEngine.Object.DestroyImmediate(texture);
     }
 
+    private static void ValidateCompactLayout(Scene scene)
+    {
+        LobbyLayout layout = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<LobbyLayout>()).Single();
+        LobbyLevelZones zones = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<LobbyLevelZones>()).Single();
+        for (int index = 0; index < 9; index++)
+        {
+            if (!zones.TryGetCenter(index, out Vector3 center) || !zones.TryGetLevel(center, out int found) || found != index || layout.Contains(center))
+                throw new InvalidOperationException("Invalid or overlapping level pad: " + (index + 1));
+        }
+        // Check a player's full body along each doorway and both routes around the start area.
+        for (int index = 0; index < 4; index++)
+            for (float z = 4.3f; z >= 1.8f; z -= 0.25f)
+                CheckPassage(new Vector3(-7.5f + index * 5, 1.1f, z));
+        for (float z = -5.8f; z <= 2; z += 0.25f)
+        {
+            CheckPassage(new Vector3(-5.5f, 1.1f, z));
+            CheckPassage(new Vector3(5.5f, 1.1f, z));
+        }
+    }
+
+    private static void CheckPassage(Vector3 position)
+    {
+        foreach (Collider collider in Physics.OverlapCapsule(position + Vector3.down * 0.48f,
+            position + Vector3.up * 0.48f, 0.46f, ~0, QueryTriggerInteraction.Ignore))
+            if (collider.gameObject.scene == SceneManager.GetActiveScene() && collider.GetComponentInParent<PlayerMovementResolver>() == null)
+                throw new InvalidOperationException("Lobby passage blocked by " + collider.name);
+    }
+
     private static void ValidateScene(Scene scene)
     {
         LobbyLayout layout = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<LobbyLayout>()).Single();
@@ -374,7 +377,7 @@ public static class LobbyPresentationBuilder
                         throw new InvalidOperationException("Room spawn is blocked by " + collider.name);
             }
         }
-        if (!layout.TryGetStartCenter(out Vector3 startCenter) || !layout.Contains(startCenter) || layout.Contains(new Vector3(0, 1.1f, 0)))
+        if (!layout.TryGetStartCenter(out Vector3 startCenter) || !layout.Contains(startCenter) || layout.Contains(new Vector3(0, 1.1f, 2.2f)))
             throw new InvalidOperationException("The start room bounds changed.");
         foreach (Transform item in scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<Transform>(true)))
             if (GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(item.gameObject) != 0)

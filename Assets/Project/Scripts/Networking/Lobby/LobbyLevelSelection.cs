@@ -20,11 +20,11 @@ namespace ModularMovement
         }
 
         [SerializeField] private Level[] levels = new Level[LevelCount];
-        [SerializeField, Min(0.1f), Tooltip("Time the host must stay on one pad to confirm a choice, in seconds.")]
-        private float selectionHoldSeconds = 0.65f;
+        [SerializeField, Min(0), Tooltip("Time the host must stay on one pad, in seconds. Zero selects immediately.")]
+        private float selectionHoldSeconds;
         private readonly NetworkVariable<int> selected = new NetworkVariable<int>(-1);
         public int SelectedIndex => selected.Value;
-        public float SelectionHoldSeconds => Mathf.Max(0.1f, selectionHoldSeconds);
+        public float SelectionHoldSeconds => Mathf.Max(0, selectionHoldSeconds);
         public bool HasSelection => IsSpawned && IsLevelAvailable(SelectedIndex);
         public string SelectedScenePath => HasSelection ? levels[SelectedIndex].scenePath : "";
 

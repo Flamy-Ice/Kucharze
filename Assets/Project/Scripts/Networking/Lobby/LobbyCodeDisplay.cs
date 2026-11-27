@@ -17,6 +17,10 @@ namespace ModularMovement
         private Vector2Int lastScreen;
         private string lastCode;
 
+        public static string FormatCode(string code)
+            => "<size=26><color=#C8D8E9>LOBBY CODE</color></size>\n<size=80>"
+                + (string.IsNullOrEmpty(code) ? "------" : code) + "</size>";
+
         private void Awake() => label = GetComponent<TMP_Text>();
 
         private void LateUpdate()
@@ -27,7 +31,7 @@ namespace ModularMovement
             if (lastCode != code)
             {
                 lastCode = code;
-                label.text = "<size=22>LOBBY CODE</size>\n" + (string.IsNullOrEmpty(code) ? "------" : code);
+                label.text = FormatCode(code);
             }
             FitSafeArea();
         }

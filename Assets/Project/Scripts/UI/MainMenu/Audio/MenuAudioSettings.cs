@@ -36,6 +36,8 @@ namespace ModularMovement
                 return;
             }
             instance = this;
+            // Leave the editor's folder so this service can survive scene changes on its own.
+            transform.SetParent(null, true);
             DontDestroyOnLoad(gameObject);
             music = GetComponent<AudioSource>();
             music.playOnAwake = false;

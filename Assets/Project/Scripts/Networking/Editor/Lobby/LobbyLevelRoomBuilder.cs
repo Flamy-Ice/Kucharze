@@ -11,7 +11,7 @@ using UnityEngine.SceneManagement;
 public static class LobbyLevelRoomBuilder
 {
     private const string RoomName = "LobbyLevelRoom";
-    public static readonly Vector3 ReadyCenter = new Vector3(-19.4f, 1.5f, -0.5f);
+    public static readonly Vector3 ReadyCenter = new Vector3(0, 1.5f, -1);
 
     [MenuItem("Tools/Kucharze/Online/Add Level Selection Room")]
     public static void Refresh()
@@ -44,7 +44,7 @@ public static class LobbyLevelRoomBuilder
         {
             SerializedProperty item = levels.GetArrayElementAtIndex(index);
             item.FindPropertyRelative("title").stringValue = "Level " + (index + 1);
-            item.FindPropertyRelative("scenePath").stringValue = index == 0 ? session.DefaultGameScenePath : "";
+            item.FindPropertyRelative("scenePath").stringValue = session.DefaultGameScenePath;
         }
         settings.ApplyModifiedPropertiesWithoutUndo();
     }
@@ -56,15 +56,15 @@ public static class LobbyLevelRoomBuilder
         Material floor = Material("Architecture/Grout.mat");
         Material wood = Material("Furnishings/FurnitureWood.mat");
         Material tile = Material("Architecture/TileA.mat");
-        Transform scenery = scene.GetRootGameObjects().FirstOrDefault(root => root.name == "LobbyPresentation")?.transform;
+        Transform scenery = LobbyHierarchySetup.Find(scene, "LobbyPresentation");
         if (scenery == null) throw new InvalidOperationException("The lobby scenery is missing.");
-        OpenDoor(scenery, wall);
-        if (!scene.GetRootGameObjects().Any(root => root.name == RoomName))
+
+        if (LobbyHierarchySetup.Find(scene, RoomName) == null)
             CreateRoom(scene, floor, wall, wood, tile);
-        Transform room = scene.GetRootGameObjects().Single(root => root.name == RoomName).transform;
+        Transform room = LobbyHierarchySetup.Find(scene, RoomName);
         ArrangeRoom(room, scenery);
         MoveStartArea(scene, scenery);
-        var bounds = new Bounds(new Vector3(-8, 1.5f, 0), new Vector3(39.2f, 3, 15.6f));
+        var bounds = new Bounds(new Vector3(0, 1.4f, 0), new Vector3(20.4f, 3, 14.4f));
         foreach (Renderer renderer in scenery.GetComponentsInChildren<Renderer>().Concat(room.GetComponentsInChildren<Renderer>()))
             bounds.Encapsulate(renderer.bounds);
         bounds.Expand(0.5f);
@@ -78,6 +78,7 @@ public static class LobbyLevelRoomBuilder
             PrefabUtility.RecordPrefabInstancePropertyModifications(framing.transform);
             PrefabUtility.RecordPrefabInstancePropertyModifications(framing.GetComponent<Camera>());
         }
+        LobbyHierarchySetup.Organize(scene);
         EditorSceneManager.MarkSceneDirty(scene);
     }
 
@@ -99,50 +100,43 @@ public static class LobbyLevelRoomBuilder
         finally { PrefabUtility.UnloadPrefabContents(root); }
     }
 
-    private static void OpenDoor(Transform scenery, Material material)
-    {
-        string[] names = { "WestWall", "WestWallCap", "WestWallSkirting", "LevelDoorNorthWall", "LevelDoorSouthWall" };
-        foreach (Transform child in scenery.Cast<Transform>().ToArray())
-            if (names.Contains(child.name)) UnityEngine.Object.DestroyImmediate(child.gameObject);
-        float height = WallTop(scenery, "EastWall");
-        Block("LevelDoorNorthWall", new Vector3(-11.4f, height * 0.5f, 4.6f), new Vector3(0.22f, height, 5.8f), material, scenery, true);
-        Block("LevelDoorSouthWall", new Vector3(-11.4f, height * 0.5f, -4.6f), new Vector3(0.22f, height, 5.8f), material, scenery, true);
-    }
-
-    private static float WallTop(Transform scenery, string name)
-    {
-        Transform wall = scenery.Find(name);
-        return wall != null ? Mathf.Max(4.2f, wall.position.y + wall.lossyScale.y * 0.5f) : 4.6f;
-    }
-
     private static void ArrangeRoom(Transform room, Transform scenery)
     {
-        float backHeight = WallTop(scenery, "NorthWall");
-        float sideHeight = WallTop(scenery, "EastWall");
-        Place(room, "Floor", new Vector3(-19.4f, -0.1f, 0), new Vector3(16, 0.2f, 11));
-        Place(room, "WestWall", new Vector3(-27.4f, sideHeight * 0.5f, 0), new Vector3(0.22f, sideHeight, 11));
-        Place(room, "NorthWall", new Vector3(-19.4f, backHeight * 0.5f, 5.5f), new Vector3(16, backHeight, 0.22f));
-        Place(room, "SouthWall", new Vector3(-19.4f, 0.35f, -5.5f), new Vector3(16, 0.7f, 0.22f));
+        // All choices now share the building floor, without a separate extension.
+        foreach (string name in new[] { "Floor", "WestWall", "NorthWall", "SouthWall" })
+        {
+            Transform obsolete = room.Find(name);
+            if (obsolete != null) UnityEngine.Object.DestroyImmediate(obsolete.gameObject);
+        }
+        Quaternion tilt = Quaternion.Euler(35, 0, 0);
         for (int index = 0; index < 9; index++)
         {
-            Transform pad = room.Find("Level_" + (index + 1).ToString("00"));
-            if (pad == null) throw new InvalidOperationException("Missing generated level pad: " + (index + 1));
-            float x = -25.8f + index * 1.6f;
-            Place(pad, "SelectionPad", new Vector3(x, 0.03f, 4.15f), new Vector3(1.15f, 0.06f, 1.1f));
+            Transform pad = LobbyHierarchySetup.Find(room, "Level_" + (index + 1).ToString("00"));
+            int group = index / 3;
+            int slot = index % 3;
+            Vector3 center = group == 0 ? new Vector3(-8.3f, 0, 0.7f - slot * 2.5f)
+                : group == 1 ? new Vector3(8.3f, 0, 0.7f - slot * 2.5f)
+                : new Vector3(-2.8f + slot * 2.8f, 0, -5.8f);
+            Place(pad, "SelectionPad", center + Vector3.up * 0.10f, new Vector3(1.55f, 0.07f, 1.4f));
             Transform zone = pad.Find("SelectionZone");
-            zone.position = new Vector3(x, 1.5f, 4.15f);
-            zone.GetComponent<BoxCollider>().size = new Vector3(1, 4, 0.75f);
-            Place(pad, "IconFrame", new Vector3(x, 1.65f, 5.25f), new Vector3(1.2f, 1.2f, 0.08f));
-            pad.Find("LevelIcon").position = new Vector3(x, 1.65f, 5.19f);
-            pad.Find("IconPlaceholder").position = new Vector3(x, 1.65f, 5.18f);
+            zone.position = center + Vector3.up * 1.5f;
+            zone.GetComponent<BoxCollider>().size = new Vector3(1.4f, 4, 1.25f);
+            Vector3 card = center + new Vector3(0, 1.6f, 0.7f);
+            Place(pad, "IconFrame", card, new Vector3(1.5f, 1.65f, 0.08f));
+            pad.Find("IconFrame").rotation = tilt;
+            pad.Find("LevelIcon").SetPositionAndRotation(card + tilt * new Vector3(0, 0.2f, -0.06f), tilt);
+            pad.Find("IconPlaceholder").SetPositionAndRotation(card + tilt * new Vector3(0, 0.2f, -0.07f), tilt);
             TextMesh title = pad.Find("LevelTitle").GetComponent<TextMesh>();
-            title.transform.position = new Vector3(x, 0.72f, 5.17f);
+            title.transform.SetPositionAndRotation(card + tilt * new Vector3(0, -0.51f, -0.07f), tilt);
             title.characterSize = 0.045f;
+            title.color = new Color(0.96f, 0.93f, 0.83f);
         }
-        Place(room, "LevelSelectionPlaque", new Vector3(-19.4f, 3.5f, 5.44f), new Vector3(10, 1.1f, 0.08f));
+        Place(room, "LevelSelectionPlaque", new Vector3(0, 0.065f, -4), new Vector3(6, 0.04f, 0.85f));
         TextMesh status = room.Find("LevelSelectionStatus").GetComponent<TextMesh>();
-        status.transform.position = new Vector3(-19.4f, 3.5f, 5.35f);
-        status.text = "HOST: SELECT A LEVEL\nSTAY ON A PAD TO CONFIRM";
+        status.transform.SetPositionAndRotation(new Vector3(0, 0.10f, -4), Quaternion.Euler(90, 0, 0));
+        status.transform.localScale = Vector3.one;
+        status.characterSize = 0.065f;
+        status.text = "HOST: SELECT A LEVEL\nSTEP ON A PAD TO SELECT";
     }
 
     private static void MoveStartArea(Scene scene, Transform scenery)
@@ -154,15 +148,15 @@ public static class LobbyLevelRoomBuilder
         // Keep the sign beside the green floor, clear of the wall-side choices.
         Transform plaque = decor.Find("READY ROOMPlaque");
         Transform sign = decor.Find("READY ROOM");
-        if (plaque != null) plaque.position = new Vector3(ReadyCenter.x, plaque.position.y, -3.05f);
-        if (sign != null) sign.position = new Vector3(ReadyCenter.x, sign.position.y, -3.125f);
+        if (plaque != null) plaque.position = new Vector3(ReadyCenter.x, plaque.position.y, 1.65f);
+        if (sign != null) sign.position = new Vector3(ReadyCenter.x, sign.position.y, 1.575f);
         foreach (LobbyLayout layout in scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<LobbyLayout>()))
         {
             var settings = new SerializedObject(layout);
             var zone = settings.FindProperty("startZone").objectReferenceValue as BoxCollider;
             if (zone == null) continue;
             zone.transform.position = ReadyCenter;
-            zone.size = new Vector3(6.4f, 5, 4.6f);
+            zone.size = new Vector3(5.8f, 4, 3);
         }
     }
 
@@ -218,7 +212,7 @@ public static class LobbyLevelRoomBuilder
             SetElement(viewSettings, "placeholders", index, placeholder);
         }
         Block("LevelSelectionPlaque", new Vector3(-19.4f, 3.5f, 5.44f), new Vector3(10, 1.1f, 0.08f), wood, room, false);
-        TextMesh status = Label("LevelSelectionStatus", "HOST: SELECT A LEVEL\nSTAY ON A PAD TO CONFIRM", new Vector3(-19.4f, 3.5f, 5.35f), 0.1f, room);
+        TextMesh status = Label("LevelSelectionStatus", "HOST: SELECT A LEVEL\nSTEP ON A PAD TO SELECT", new Vector3(-19.4f, 3.5f, 5.35f), 0.1f, room);
         viewSettings.FindProperty("statusLabel").objectReferenceValue = status;
         zoneSettings.ApplyModifiedPropertiesWithoutUndo();
         viewSettings.ApplyModifiedPropertiesWithoutUndo();

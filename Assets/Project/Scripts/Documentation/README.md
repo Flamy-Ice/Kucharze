@@ -4,6 +4,7 @@
 
 - [Pierwsze uruchomienie online: host i kod Relay](Networking/README.md)
 - [Menu główne, muzyka, autorzy i Host/Join](UI/MainMenu.md)
+- [HUD na PC i Androidzie](UI/GameplayHud.md)
 - [Wejście sterowania](Movement/PlayerInputActions.md)
 - [Koordynacja ruchu](Movement/PlayerMovementResolver.md)
 - [Stan gracza i repliki](Movement/PlayerStates.md)

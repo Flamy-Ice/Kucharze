@@ -877,6 +877,8 @@ GameObject:
   - component: {fileID: 157084541}
   - component: {fileID: 157084540}
   - component: {fileID: 157084543}
+  - component: {fileID: 157084545}
+  - component: {fileID: 157084544}
   m_Layer: 0
   m_Name: OptionsCanvas
   m_TagString: Untagged
@@ -979,6 +981,34 @@ MonoBehaviour:
   hint: {fileID: 1677417314}
   resolution: {fileID: 1543263629}
   resolutionLabel: {fileID: 643687709}
+--- !u!114 &157084544
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 157084538}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40b1b130344808b4cb1a6bb7f477825a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ModularMovement.MenuPanelEntrance
+  durationSeconds: 0.55
+  intensity: 1
+  startingOffset: {x: 0, y: -150}
+  startingScale: 0.76
+--- !u!225 &157084545
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 157084538}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &192871535
 GameObject:
   m_ObjectHideFlags: 0
@@ -3644,6 +3674,8 @@ GameObject:
   - component: {fileID: 701791329}
   - component: {fileID: 701791328}
   - component: {fileID: 701791327}
+  - component: {fileID: 701791331}
+  - component: {fileID: 701791330}
   m_Layer: 0
   m_Name: CreditsCanvas
   m_TagString: Untagged
@@ -3685,11 +3717,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ModularMovement.MenuCredits
   team:
   - Name: Jakub Lewandowski
-    Role: '2D Graphics
+    Role: 'Game Systems Integration
 
-      3D Graphics
+      Online Multiplayer
 
-      Programmer
+      Programming
 
       UI/UX'
   - Name: Mateusz Filipczak
@@ -3759,6 +3791,34 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
+--- !u!114 &701791330
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 701791325}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40b1b130344808b4cb1a6bb7f477825a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ModularMovement.MenuPanelEntrance
+  durationSeconds: 0.55
+  intensity: 1
+  startingOffset: {x: 0, y: -150}
+  startingScale: 0.76
+--- !u!225 &701791331
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 701791325}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &729807559
 GameObject:
   m_ObjectHideFlags: 0
@@ -6118,11 +6178,11 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1.02
-  m_Text: '2D Graphics
+  m_Text: 'Game Systems Integration
 
-    3D Graphics
+    Online Multiplayer
 
-    Programmer
+    Programming
 
     UI/UX'
 --- !u!222 &1079764434
@@ -7690,6 +7750,8 @@ GameObject:
   - component: {fileID: 1346560764}
   - component: {fileID: 1346560766}
   - component: {fileID: 1346560765}
+  - component: {fileID: 1346560768}
+  - component: {fileID: 1346560767}
   m_Layer: 0
   m_Name: PlayCanvas
   m_TagString: Untagged
@@ -7758,6 +7820,34 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
+--- !u!114 &1346560767
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1346560763}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40b1b130344808b4cb1a6bb7f477825a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ModularMovement.MenuPanelEntrance
+  durationSeconds: 0.55
+  intensity: 1
+  startingOffset: {x: 0, y: -150}
+  startingScale: 0.76
+--- !u!225 &1346560768
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1346560763}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1383230526
 GameObject:
   m_ObjectHideFlags: 0
@@ -12180,6 +12270,8 @@ GameObject:
   - component: {fileID: 2146735145}
   - component: {fileID: 2146735147}
   - component: {fileID: 2146735146}
+  - component: {fileID: 2146735149}
+  - component: {fileID: 2146735148}
   m_Layer: 0
   m_Name: HomeCanvas
   m_TagString: Untagged
@@ -12249,6 +12341,34 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
+--- !u!114 &2146735148
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2146735144}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40b1b130344808b4cb1a6bb7f477825a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ModularMovement.MenuPanelEntrance
+  durationSeconds: 0.55
+  intensity: 1
+  startingOffset: {x: 0, y: -150}
+  startingScale: 0.76
+--- !u!225 &2146735149
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2146735144}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &9000000100
 GameObject:
   m_ObjectHideFlags: 0

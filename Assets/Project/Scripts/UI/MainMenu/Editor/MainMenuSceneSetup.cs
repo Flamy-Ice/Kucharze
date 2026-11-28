@@ -34,13 +34,15 @@ public static class MainMenuSceneSetup
     private static void Poll()
     {
         if (EditorApplication.isCompiling || EditorApplication.isUpdating || EditorApplication.isPlayingOrWillChangePlaymode
-            || !File.Exists(RequestPath)) return;
+            || BuildPipeline.isBuildingPlayer || !File.Exists(RequestPath)) return;
         string operation = File.ReadAllText(RequestPath).Trim();
         if (!AssetDatabase.DeleteAsset(RequestPath)) File.Delete(RequestPath);
         try
         {
             if (operation == "create") Create();
             else if (operation == "validate") Validate();
+            else if (operation == "entrance") MainMenuEntranceSetup.Refresh();
+            else if (operation == "entrance-defaults") MainMenuEntranceSetup.Refresh(true);
             else throw new InvalidOperationException("Unknown main menu operation.");
             File.WriteAllText(ResultPath, "SUCCESS: " + operation + "\n" + ScenePath);
         }
@@ -167,6 +169,7 @@ public static class MainMenuSceneSetup
             controller.ShowHome();
             MainMenuPresentationSetup.ApplyToScene(scene);
             MainMenuNicknameSetup.ApplyToScene(scene);
+            MainMenuEntranceSetup.ApplyToScene(scene);
             if (!EditorSceneManager.SaveScene(scene, ScenePath)) throw new IOException("Could not save the main menu scene.");
             var scenes = EditorBuildSettings.scenes.Where(item => item.path != ScenePath).ToList();
             scenes.Insert(0, new EditorBuildSettingsScene(ScenePath, true));

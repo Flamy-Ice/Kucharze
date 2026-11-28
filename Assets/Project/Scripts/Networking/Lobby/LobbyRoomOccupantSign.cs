@@ -27,7 +27,7 @@ namespace ModularMovement
                         || appearance.PaletteIndex != roomIndex
                         || !player.TryGetComponent(out LobbyPlayerNickname nickname)) continue;
                     text = nickname.Nickname;
-                    if (string.IsNullOrWhiteSpace(text)) text = "JOINING...";
+                    if (string.IsNullOrWhiteSpace(text)) text = LobbyPlayerNickname.LoadingName;
                     break;
                 }
             if (lastText == text) return;

@@ -28,7 +28,7 @@ public static class LobbySceneSetup
     private static void Poll()
     {
         if (EditorApplication.timeSinceStartup < nextPoll || EditorApplication.isCompiling || EditorApplication.isUpdating
-            || EditorApplication.isPlayingOrWillChangePlaymode || !File.Exists(Request)) return;
+            || EditorApplication.isPlayingOrWillChangePlaymode || BuildPipeline.isBuildingPlayer || !File.Exists(Request)) return;
         nextPoll = EditorApplication.timeSinceStartup + 1;
         string operation = File.ReadAllText(Request).Trim();
         if (!AssetDatabase.DeleteAsset(Request)) File.Delete(Request);
@@ -37,6 +37,7 @@ public static class LobbySceneSetup
             if (operation == "create") Create();
             else if (operation == "validate") Validate();
             else if (operation == "preview") Preview();
+            else if (operation == "player-colors") LobbyPlayerVisualSetup.ApplyColors();
             else if (operation == "rebuild")
             {
                 LobbyPresentationBuilder.RebuildLayout();

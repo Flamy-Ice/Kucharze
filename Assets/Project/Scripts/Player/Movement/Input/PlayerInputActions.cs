@@ -35,6 +35,7 @@ namespace ModularMovement
         private InputDevice[] assignedDevices;
         // Input is allowed only when this switch, window focus and application pause all permit it.
         private bool inputEnabled = true;
+        private bool controlsBlocked;
         private bool hasFocus = true;
         private bool isPaused;
         // Remember when settings need checking and when a previous setup attempt failed.
@@ -91,7 +92,8 @@ namespace ModularMovement
         public bool DashInputAvailable { get; private set; }
         public bool HasMoveInput => MoveInput.sqrMagnitude > 0f;
         public InputActionAsset RuntimeActions => runtimeActions;
-        public bool InputEnabled => inputEnabled;
+        public bool InputEnabled => inputEnabled && !controlsBlocked;
+        public bool ControlsBlocked => controlsBlocked;
         // Other scripts on this player can see which keyboards or gamepads it may use.
         public ReadOnlyArray<InputDevice>? AssignedDevices => assignedDevices == null
             ? (ReadOnlyArray<InputDevice>?)null : new ReadOnlyArray<InputDevice>(assignedDevices);
@@ -187,6 +189,17 @@ namespace ModularMovement
             UpdateMapState();
         }
 
+        // Menus discard new controls without cancelling an already accepted ability.
+        public void SetControlsBlocked(bool blocked)
+        {
+            if (controlsBlocked == blocked) return;
+            controlsBlocked = blocked;
+            MoveInput = Vector2.zero;
+            ResetRunInput();
+            pendingDashPressCount = DashPressCount;
+            DashInputAvailable = false;
+        }
+
         // Choose which devices this player may use. This does not reserve them for this player.
         // A null list accepts all devices. An empty list accepts none.
         public void AssignDevices(params InputDevice[] devices)
@@ -229,6 +242,14 @@ namespace ModularMovement
             }
             if (!isActiveAndEnabled || !inputEnabled || !hasFocus || isPaused)
                 return ClearInput();
+
+            if (controlsBlocked)
+            {
+                MoveInput = Vector2.zero;
+                RunHeld = false;
+                DashInputAvailable = false;
+                return MoveInput;
+            }
 
             if (!EnsureInitialized() || !moveAction.enabled)
                 return ClearInput();
@@ -361,7 +382,8 @@ namespace ModularMovement
 
         private void OnDeviceChange(InputDevice device, InputDeviceChange change)
         {
-            if ((assignedDevices == null || Array.IndexOf(assignedDevices, device) >= 0)
+            // Hiding touch controls removes their virtual device; a menu keeps the accepted dash alive.
+            if (!controlsBlocked && (assignedDevices == null || Array.IndexOf(assignedDevices, device) >= 0)
                 && (change == InputDeviceChange.Removed || change == InputDeviceChange.Disconnected))
                 ResetInputButtons();
             if (assignedDevices != null && Array.IndexOf(assignedDevices, device) >= 0
@@ -416,6 +438,7 @@ namespace ModularMovement
 
         private void OnRunPerformed(InputAction.CallbackContext context)
         {
+            if (controlsBlocked) return;
             // Count presses between movement steps, including a quick press and release.
             unchecked { pendingRunPressCount++; }
         }
@@ -429,6 +452,7 @@ namespace ModularMovement
 
         private void OnDashPerformed(InputAction.CallbackContext context)
         {
+            if (controlsBlocked) return;
             // Remember quick taps between movement steps without repeating a held button.
             unchecked { pendingDashPressCount++; }
         }

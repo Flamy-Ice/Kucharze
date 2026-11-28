@@ -11,14 +11,15 @@ namespace ModularMovement
     {
         private readonly NetworkVariable<FixedString64Bytes> nickname = new NetworkVariable<FixedString64Bytes>();
         private bool submitted;
-        public string Nickname => nickname.Value.ToString();
+        public const string LoadingName = "Loading...";
+        public string Nickname => nickname.Value.Length == 0 ? LoadingName : nickname.Value.ToString();
 
         public override void OnNetworkSpawn()
         {
             if (IsServer)
             {
                 submitted = false;
-                nickname.Value = new FixedString64Bytes("Player " + (OwnerClientId + 1));
+                nickname.Value = default;
             }
             string savedName = PlayerNicknameProfile.SavedName;
             if (IsOwner && PlayerNicknameProfile.IsValid(savedName))

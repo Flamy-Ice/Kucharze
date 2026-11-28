@@ -52,6 +52,37 @@ namespace ModularMovement.Tests
         }
 
         [Test]
+        public void MenuBlockingFinishesAcceptedDashAndDoesNotQueueAnother()
+        {
+            var resolver = player.GetComponent<PlayerMovementResolver>();
+            var input = player.GetComponent<PlayerInputActions>();
+            var dash = player.GetComponent<PlayerDash>();
+            var accepted = input.CaptureSnapshot();
+            accepted.Move = Vector2.right;
+            accepted.DashAvailable = true;
+            accepted.DashPressCount++;
+            resolver.Simulate(Step, accepted);
+            Assert.That(dash.IsDashing, Is.True);
+            // The device reading must match the press the motor just consumed.
+            typeof(PlayerInputActions).GetMethod("RestoreReadings", BindingFlags.Instance | BindingFlags.NonPublic)
+                .Invoke(input, new object[] { accepted });
+            input.SetControlsBlocked(true);
+            var blocked = input.CaptureSnapshot();
+            Assert.That(blocked.Move, Is.EqualTo(Vector2.zero));
+            Assert.That(blocked.DashAvailable, Is.False);
+            Assert.That(blocked.DashResetVersion, Is.EqualTo(accepted.DashResetVersion));
+            float remaining = dash.CaptureSimulation().Remaining;
+            resolver.Simulate(Step, blocked);
+            Assert.That(dash.IsDashing, Is.True);
+            Assert.That(dash.CaptureSimulation().Remaining, Is.EqualTo(remaining - Step).Within(0.00001f));
+            for (int i = 0; i < 120; i++) resolver.Simulate(Step, blocked);
+            Assert.That(dash.IsDashing, Is.False);
+            input.SetControlsBlocked(false);
+            resolver.Simulate(Step, input.CaptureSnapshot());
+            Assert.That(dash.IsDashing, Is.False);
+        }
+
+        [Test]
         public void LocalInputMovesBeforeAnAcknowledgementExists()
         {
             player.GetComponent<PlayerMovementResolver>().Simulate(Step, Input(0));

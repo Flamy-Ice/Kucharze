@@ -306,6 +306,7 @@ public static class LobbyPresentationBuilder
                     properties.SetColor("_BaseColor", renderer is MeshRenderer ? Color.Lerp(Accents[paletteIndex], Color.white, 0.35f) : Accents[paletteIndex]);
                     if (renderer is SkinnedMeshRenderer) properties.SetColor("_EmissionColor", Accents[paletteIndex] * 0.20f);
                     renderer.SetPropertyBlock(properties, 0);
+                    if (renderer is SkinnedMeshRenderer) renderer.SetPropertyBlock(properties, 1);
                 }
         }
         Physics.SyncTransforms();

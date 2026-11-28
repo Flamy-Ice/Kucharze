@@ -38,11 +38,11 @@ public static class LobbyPlayerVisualSetup
             model.localScale = sourceModel.localScale;
             var renderer = model.GetComponentInChildren<SkinnedMeshRenderer>();
             Mesh original = sourceModel.GetComponentInChildren<SkinnedMeshRenderer>().sharedMesh;
-            renderer.sharedMesh = SplitCharacter(original, renderer.transform, model);
+            renderer.sharedMesh = SplitCharacter(original, renderer.transform, model, renderer.bones);
             renderer.sharedMaterials = new[]
             {
                 MakeMaterial("Coat", new Color(0.23f, 0.57f, 0.77f)),
-                MakeMaterial("HatAndGloves", new Color(0.94f, 0.91f, 0.80f)),
+                MakeMaterial("HatAndGloves", new Color(0.23f, 0.57f, 0.77f)),
                 MakeMaterial("Face", new Color(0.88f, 0.69f, 0.45f)),
                 MakeMaterial("Boots", new Color(0.22f, 0.24f, 0.25f))
             };
@@ -93,19 +93,52 @@ public static class LobbyPlayerVisualSetup
         material.SetColor("_BaseColor", color);
         if (material.HasProperty("_Smoothness")) material.SetFloat("_Smoothness", 0);
         if (material.HasProperty("_SpecColor")) material.SetColor("_SpecColor", Color.black);
-        if (!unlit && (name == "Coat" || name == "Face"))
+        if (!unlit && (name == "Coat" || name == "HatAndGloves" || name == "Face"))
         {
             material.EnableKeyword("_EMISSION");
-            material.SetColor("_EmissionColor", color * (name == "Coat" ? 0.20f : 0.07f));
+            material.SetColor("_EmissionColor", color * (name == "Face" ? 0.07f : 0.20f));
         }
         EditorUtility.SetDirty(material);
         return material;
     }
 
-    private static Mesh SplitCharacter(Mesh original, Transform renderer, Transform model)
+    // Changes material regions only; the prefab's scale, rig and animation assignments remain untouched.
+    [MenuItem("Tools/Kucharze/Online/Update Player Clothing Colors")]
+    public static void ApplyColors()
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode) throw new System.InvalidOperationException("Exit Play Mode first.");
+        var player = PrefabUtility.LoadPrefabContents(ProjectAssetPaths.LobbyPlayer);
+        try
+        {
+            var source = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Development/Networking/OnlinePlayer.prefab");
+            var model = player.GetComponent<PlayerRotation>().ResolvedModel;
+            var renderer = model.GetComponentInChildren<SkinnedMeshRenderer>();
+            var original = source.GetComponent<PlayerRotation>().ResolvedModel.GetComponentInChildren<SkinnedMeshRenderer>().sharedMesh;
+            SplitCharacter(original, renderer.transform, model, renderer.bones);
+            MakeMaterial("HatAndGloves", new Color(0.23f, 0.57f, 0.77f));
+            AssetDatabase.SaveAssets();
+        }
+        finally { PrefabUtility.UnloadPrefabContents(player); }
+    }
+
+    private static Mesh SplitCharacter(Mesh original, Transform renderer, Transform model, Transform[] bones)
     {
         Vector3[] vertices = original.vertices;
         int[] triangles = original.triangles;
+        var handBones = new HashSet<int>();
+        for (int index = 0; index < bones.Length; index++)
+            if (bones[index] != null && bones[index].name.StartsWith("hand.", System.StringComparison.Ordinal)) handBones.Add(index);
+        if (handBones.Count != 2) throw new System.InvalidOperationException("Expected both hand bones before splitting clothing.");
+        BoneWeight[] weights = original.boneWeights;
+        var handWeights = new float[vertices.Length];
+        for (int index = 0; index < vertices.Length; index++)
+        {
+            BoneWeight weight = weights[index];
+            handWeights[index] = (handBones.Contains(weight.boneIndex0) ? weight.weight0 : 0)
+                + (handBones.Contains(weight.boneIndex1) ? weight.weight1 : 0)
+                + (handBones.Contains(weight.boneIndex2) ? weight.weight2 : 0)
+                + (handBones.Contains(weight.boneIndex3) ? weight.weight3 : 0);
+        }
         int[] parents = Enumerable.Range(0, vertices.Length).ToArray();
         var welded = new Dictionary<Vector3Int, int>();
         var local = new Vector3[vertices.Length];
@@ -139,8 +172,9 @@ public static class LobbyPlayerVisualSetup
         {
             Bounds piece = pieces[Find(parents, triangles[index])];
             float height = (piece.center.y - bounds.min.y) / Mathf.Max(0.001f, bounds.size.y);
-            int group = height > 0.70f ? 1 : height > 0.52f ? 2 : height < 0.16f ? 3 :
-                Mathf.Abs(piece.center.x - bounds.center.x) > bounds.size.x * 0.22f ? 1 : 0;
+            // Hands share a connected surface with sleeves, so the hand bones identify the cuff.
+            float handWeight = (handWeights[triangles[index]] + handWeights[triangles[index + 1]] + handWeights[triangles[index + 2]]) / 3;
+            int group = height > 0.70f ? 1 : height > 0.52f ? 2 : height < 0.16f ? 3 : handWeight >= 0.5f ? 2 : 0;
             groups[group].Add(triangles[index]);
             groups[group].Add(triangles[index + 1]);
             groups[group].Add(triangles[index + 2]);

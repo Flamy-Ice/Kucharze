@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace ModularMovement
 {
-    // Gives each player a readable coat and floor ring without changing movement or animation.
+    // Colors the coat, sleeves, hat and floor ring from the player's replicated palette.
     [DisallowMultipleComponent, RequireComponent(typeof(NetworkObject))]
     public sealed class PlayerNetworkAppearance : NetworkBehaviour
     {
@@ -40,10 +40,11 @@ namespace ModularMovement
                 {
                     if (materials[index] == null || !materials[index].HasProperty(BaseColor)) continue;
                     renderer.GetPropertyBlock(properties, index);
-                    Color color = index == 0 ? LobbyPlayerColors.Get(palette.Value) : materials[index].GetColor(BaseColor);
+                    bool teamSlot = index == 0 || (index == 1 && renderer is SkinnedMeshRenderer);
+                    Color color = teamSlot ? LobbyPlayerColors.Get(palette.Value) : materials[index].GetColor(BaseColor);
                     if (index == 0 && renderer is MeshRenderer) color = Color.Lerp(color, Color.white, 0.35f);
                     properties.SetColor(BaseColor, color);
-                    if (index == 0 && renderer is SkinnedMeshRenderer && materials[index].HasProperty("_EmissionColor"))
+                    if (teamSlot && renderer is SkinnedMeshRenderer && materials[index].HasProperty("_EmissionColor"))
                         properties.SetColor("_EmissionColor", color * 0.20f);
                     renderer.SetPropertyBlock(properties, index);
                 }

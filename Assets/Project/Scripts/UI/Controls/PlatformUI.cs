@@ -22,7 +22,10 @@ namespace ModularMovement
         private PreviewMode editorPreview = PreviewMode.Automatic;
 #endif
 
-        private void OnEnable()
+        private void OnEnable() => Refresh();
+        private void Update() => Refresh();
+
+        public void Refresh()
         {
             if (mobileControls == null)
             {
@@ -45,7 +48,7 @@ namespace ModularMovement
                 isMobile = editorPreview == PreviewMode.Mobile;
 #endif
 
-            mobileControls.SetActive(isMobile);
+            if (mobileControls.activeSelf != isMobile) mobileControls.SetActive(isMobile);
         }
     }
 }

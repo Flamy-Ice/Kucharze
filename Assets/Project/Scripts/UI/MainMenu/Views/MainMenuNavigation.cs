@@ -24,6 +24,8 @@ namespace ModularMovement
             currentScreen = index;
             for (int screen = 0; screen < screens.Length; screen++)
                 if (screens[screen] != null) screens[screen].SetActive(screen == index);
+            // Home can already be active at startup, so activation alone is not enough to start its entrance.
+            if (screens[index] != null && screens[index].TryGetComponent<MenuPanelEntrance>(out var entrance)) entrance.Play();
             if (EventSystem.current != null)
             {
                 EventSystem.current.firstSelectedGameObject = null;

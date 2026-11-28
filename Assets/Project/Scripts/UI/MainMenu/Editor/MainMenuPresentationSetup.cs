@@ -217,7 +217,7 @@ public static class MainMenuPresentationSetup
             UnityEngine.Object.DestroyImmediate(child.gameObject);
         var settings = new SerializedObject(screen.GetComponent<MenuCredits>());
         string[] names = { "Jakub Lewandowski", "Mateusz Filipczak", "Adriana Frankowska", "Szymon Wosiek" };
-        string[] roles = { "2D Graphics\n3D Graphics\nProgrammer\nUI/UX", "Level Design\nSounds", "2D Graphics\n3D Graphics\nAnimations\nUI/UX", "3D Graphics\nVFX" };
+        string[] roles = { "Game Systems Integration\nOnline Multiplayer\nProgramming\nUI/UX", "Level Design\nSounds", "2D Graphics\n3D Graphics\nAnimations\nUI/UX", "3D Graphics\nVFX" };
         Color[] tints = { new Color32(200, 239, 224, 255), new Color32(247, 212, 188, 255),
             new Color32(227, 217, 255, 255), new Color32(210, 233, 255, 255) };
         SerializedProperty team = settings.FindProperty("team");
